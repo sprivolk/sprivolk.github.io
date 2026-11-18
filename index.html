@@ -66,6 +66,10 @@ img { display:block; max-width:100%; }
 .top .wrap { height:60px; display:flex; align-items:center; gap:28px; }
 .logo { font:700 22px var(--font-display); letter-spacing:2px; color:#fff; text-transform:uppercase; display:flex; align-items:center; gap:10px; }
 .logo i { width:12px; height:12px; background:var(--accent-text); box-shadow:0 0 12px rgba(76,201,94,.6); display:block; }
+.lang { display:inline-flex; gap:2px; padding:3px; background:var(--well); border:1px solid var(--well-edge); border-radius:var(--radius); }
+.lang button { height:30px; padding:0 10px; background:none; border:0; border-radius:2px; cursor:pointer; color:var(--text-300); font:800 12px var(--font-text); letter-spacing:.8px; }
+.lang button:hover { color:#fff; }
+.lang button.is-on { color:#fff; background:var(--fill-steel); box-shadow:inset 0 1px 0 rgba(255,255,255,.2), inset 0 -2px 0 var(--accent-text); }
 .nav { display:flex; gap:22px; margin-left:auto; }
 .nav a { color:var(--text-200); font:700 13px var(--font-text); letter-spacing:1px; text-transform:uppercase; }
 .nav a:hover { color:#fff; text-decoration:none; }
@@ -166,7 +170,9 @@ footer .links { margin-left:auto; display:flex; gap:18px; flex-wrap:wrap; }
   .wrap { padding:0 16px; }
   .nav { display:none; }
   .top .wrap { gap:12px; }
-  .top .btn { margin-left:auto; }
+  .lang { margin-left:auto; }
+  .top .btn .tg-text { display:none; }
+  .top .btn { padding:0 11px; }
   .logo { font-size:19px; letter-spacing:1.5px; }
   .hero h1 { font-size:clamp(36px,11.2vw,60px); letter-spacing:1px; }
   .hero { min-height:0; }
@@ -203,12 +209,13 @@ footer .links { margin-left:auto; display:flex; gap:18px; flex-wrap:wrap; }
   <div class="wrap">
     <a class="logo" href="#"><i></i>Placeholder</a>
     <nav class="nav">
-      <a href="#download">Скачать</a>
-      <a href="#install">Установка</a>
-      <a href="#support">Поддержать</a>
-      <a href="#faq">Вопросы</a>
+      <a href="#download" data-i18n="nav.download">Скачать</a>
+      <a href="#install" data-i18n="nav.install">Установка</a>
+      <a href="#support" data-i18n="nav.support">Поддержать</a>
+      <a href="#faq" data-i18n="nav.faq">Вопросы</a>
     </nav>
-    <a class="btn btn--tg btn--sm" data-link="telegram" href="#"><svg><use href="#i-tg"/></svg>Телеграм</a>
+    <div class="lang" role="group" aria-label="Language"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
+    <a class="btn btn--tg btn--sm" data-link="telegram" href="#"><svg><use href="#i-tg"/></svg><span class="tg-text" data-i18n="tg">Телеграм</span></a>
   </div>
 </header>
 
@@ -216,36 +223,36 @@ footer .links { margin-left:auto; display:flex; gap:18px; flex-wrap:wrap; }
 <div class="hero" id="download">
   <div class="hero__bg"></div>
   <div class="wrap">
-    <span class="badge"><span class="pulse"></span>Открытый бета-тест</span>
+    <span class="badge"><span class="pulse"></span><span data-i18n="badge">Открытый бета-тест</span></span>
     <h1>Place<span>holder</span></h1>
-    <p class="lead">Тактический шутер 5×5 для телефона и ПК. Закладка бомбы, экономика раундов, гранаты — и всё это бесплатно.</p>
+    <p class="lead" data-i18n="lead">Тактический шутер 5×5 для телефона и ПК. Закладка бомбы, экономика раундов, гранаты — и всё это бесплатно.</p>
     <div class="cta" id="cta">
       <a class="btn btn--primary btn--big" data-link="windows" data-platform="windows" href="#">
         <svg><use href="#i-win"/></svg>
-        <span class="lbl">Скачать для Windows<span class="sub" data-size="windows">ZIP · — МБ</span></span>
+        <span class="lbl"><span data-i18n="dl.win">Скачать для Windows</span><span class="sub" data-size="windows">ZIP · — МБ</span></span>
       </a>
       <a class="btn btn--big" data-link="android" data-platform="android" href="#">
         <svg><use href="#i-android"/></svg>
-        <span class="lbl">Скачать для Android<span class="sub" data-size="android">APK · — МБ</span></span>
+        <span class="lbl"><span data-i18n="dl.android">Скачать для Android</span><span class="sub" data-size="android">APK · — МБ</span></span>
       </a>
     </div>
-    <div class="ios-note">На iPhone игры пока нет — следи за новостями в Телеграме.</div>
-    <div class="ver"><span>Версия <b data-field="version">—</b></span><span>Обновлено <b data-field="date">—</b></span><a href="#install">Как установить →</a></div>
+    <div class="ios-note" data-i18n="ios">На iPhone игры пока нет — следи за новостями в Телеграме.</div>
+    <div class="ver"><span><span data-i18n="ver">Версия</span> <b data-field="version">—</b></span><span><span data-i18n="updated">Обновлено</span> <b data-date>—</b></span><a href="#install" data-i18n="howto">Как установить →</a></div>
   </div>
 </div>
 
 <!-- ===== Gallery ===== -->
 <section class="alt">
   <div class="wrap">
-    <div class="sec-head"><span class="tag">// 01</span><h2>Скриншоты</h2></div>
+    <div class="sec-head"><span class="tag">// 01</span><h2 data-i18n="h.shots">Скриншоты</h2></div>
     <div class="gallery">
-      <figure><img src="img/hero.jpg" alt="Стрельба на тренировочной карте" loading="lazy"></figure>
-      <figure><img src="img/smoke.jpg" alt="Дымовая граната" loading="lazy"></figure>
-      <figure><img src="img/arena.jpg" alt="Тренировочная арена сверху" loading="lazy"></figure>
+      <figure><img src="img/hero.jpg" data-i18n-alt="alt1" alt="Стрельба на тренировочной карте" loading="lazy"></figure>
+      <figure><img src="img/smoke.jpg" data-i18n-alt="alt2" alt="Дымовая граната" loading="lazy"></figure>
+      <figure><img src="img/arena.jpg" data-i18n-alt="alt3" alt="Тренировочная арена сверху" loading="lazy"></figure>
     </div>
     <div class="gallery-row">
-      <figure><img src="img/props.jpg" alt="Укрытия" loading="lazy"></figure>
-      <figure><img src="img/room.jpg" alt="Нож в коридоре" loading="lazy"></figure>
+      <figure><img src="img/props.jpg" data-i18n-alt="alt4" alt="Укрытия" loading="lazy"></figure>
+      <figure><img src="img/room.jpg" data-i18n-alt="alt5" alt="Нож в коридоре" loading="lazy"></figure>
     </div>
   </div>
 </section>
@@ -253,8 +260,8 @@ footer .links { margin-left:auto; display:flex; gap:18px; flex-wrap:wrap; }
 <!-- ===== Install ===== -->
 <section id="install">
   <div class="wrap">
-    <div class="sec-head"><span class="tag">// 02</span><h2>Как установить</h2>
-      <p>Игры пока нет в магазинах, поэтому система предупредит о «неизвестном приложении». Это нормально — ниже по шагам, что нажать.</p></div>
+    <div class="sec-head"><span class="tag">// 02</span><h2 data-i18n="h.install">Как установить</h2>
+      <p data-i18n="install.lead">Игры пока нет в магазинах, поэтому система предупредит о «неизвестном приложении». Это нормально — ниже по шагам, что нажать.</p></div>
     <div class="tabs" role="tablist">
       <button class="tab" data-tab="windows"><svg><use href="#i-win"/></svg>Windows</button>
       <button class="tab" data-tab="android"><svg><use href="#i-android"/></svg>Android</button>
@@ -262,27 +269,27 @@ footer .links { margin-left:auto; display:flex; gap:18px; flex-wrap:wrap; }
 
     <div class="pane" data-pane="windows">
       <ol class="steps">
-        <li class="panel">Скачай архив <b>Placeholder-Windows.zip</b> кнопкой вверху страницы.</li>
-        <li class="panel">Нажми на архив правой кнопкой → <b>«Извлечь всё»</b>. Не запускай игру прямо из архива.</li>
-        <li class="panel">Открой папку и запусти <span class="k">PlaceholderShooter.exe</span>.</li>
-        <li class="panel">Если появилось синее окно <b>«Windows защитил ваш компьютер»</b> — нажми <span class="k">Подробнее</span>, затем <span class="k">Выполнить в любом случае</span>.</li>
-        <li class="panel">Войди через Google — и в бой.</li>
+        <li class="panel" data-i18n="step1">Скачай архив <b>Placeholder-Windows.zip</b> кнопкой вверху страницы.</li>
+        <li class="panel" data-i18n="step2">Нажми на архив правой кнопкой → <b>«Извлечь всё»</b>. Не запускай игру прямо из архива.</li>
+        <li class="panel" data-i18n="step3">Открой папку и запусти <span class="k">PlaceholderShooter.exe</span>.</li>
+        <li class="panel" data-i18n="step4">Если появилось синее окно <b>«Windows защитил ваш компьютер»</b> — нажми <span class="k">Подробнее</span>, затем <span class="k">Выполнить в любом случае</span>.</li>
+        <li class="panel" data-i18n="step5">Войди через Google — и в бой.</li>
       </ol>
       <div class="panel side">
-        <div class="warn">Антивирус может ругаться на новую игру без цифровой подписи. Скачивай только по ссылкам с этой страницы или из нашего Телеграма.</div>
+        <div class="warn" data-i18n="warn1">Антивирус может ругаться на новую игру без цифровой подписи. Скачивай только по ссылкам с этой страницы или из нашего Телеграма.</div>
       </div>
     </div>
 
     <div class="pane" data-pane="android">
       <ol class="steps">
-        <li class="panel">Скачай файл <b>Placeholder.apk</b> кнопкой вверху страницы (или из закрепа в Телеграме).</li>
-        <li class="panel">Открой скачанный файл. Телефон спросит разрешение — нажми <span class="k">Настройки</span> и включи <b>«Разрешить из этого источника»</b>.</li>
-        <li class="panel">Вернись назад и нажми <span class="k">Установить</span>.</li>
-        <li class="panel">Если Play Защита предупредит о неизвестном приложении — <span class="k">Подробнее</span> → <span class="k">Всё равно установить</span>.</li>
-        <li class="panel">Для обновления просто поставь новый APK поверх старого — прогресс хранится на сервере.</li>
+        <li class="panel" data-i18n="step6">Скачай файл <b>Placeholder.apk</b> кнопкой вверху страницы (или из закрепа в Телеграме).</li>
+        <li class="panel" data-i18n="step7">Открой скачанный файл. Телефон спросит разрешение — нажми <span class="k">Настройки</span> и включи <b>«Разрешить из этого источника»</b>.</li>
+        <li class="panel" data-i18n="step8">Вернись назад и нажми <span class="k">Установить</span>.</li>
+        <li class="panel" data-i18n="step9">Если Play Защита предупредит о неизвестном приложении — <span class="k">Подробнее</span> → <span class="k">Всё равно установить</span>.</li>
+        <li class="panel" data-i18n="step10">Для обновления просто поставь новый APK поверх старого — прогресс хранится на сервере.</li>
       </ol>
       <div class="panel side">
-        <div class="warn">На Xiaomi (MIUI / HyperOS) может понадобиться ещё раз подтвердить установку в отдельном окне.</div>
+        <div class="warn" data-i18n="warn2">На Xiaomi (MIUI / HyperOS) может понадобиться ещё раз подтвердить установку в отдельном окне.</div>
       </div>
     </div>
   </div>
@@ -291,11 +298,11 @@ footer .links { margin-left:auto; display:flex; gap:18px; flex-wrap:wrap; }
 <!-- ===== Support ===== -->
 <section class="alt" id="support">
   <div class="wrap">
-    <div class="sec-head"><span class="tag">// 03</span><h2>Поддержать автора</h2>
-      <p>Игру делает маленькая независимая команда. Донаты пойдут на сервера для матчей и на развитие игры.</p></div>
+    <div class="sec-head"><span class="tag">// 03</span><h2 data-i18n="h.support">Поддержать автора</h2>
+      <p data-i18n="support.lead">Игру делает маленькая независимая команда. Донаты пойдут на сервера для матчей и на развитие игры.</p></div>
     <div class="panel soon">
-      <span class="badge badge--wait"><span class="pulse"></span>В разработке</span>
-      <p>Способы поддержки пока недоступны — скоро появятся здесь и в нашем Телеграме.</p>
+      <span class="badge badge--wait"><span class="pulse"></span><span data-i18n="support.badge">В разработке</span></span>
+      <p data-i18n="support.text">Способы поддержки пока недоступны — скоро появятся здесь и в нашем Телеграме.</p>
     </div>
   </div>
 </section>
@@ -303,14 +310,14 @@ footer .links { margin-left:auto; display:flex; gap:18px; flex-wrap:wrap; }
 <!-- ===== FAQ ===== -->
 <section id="faq">
   <div class="wrap">
-    <div class="sec-head"><span class="tag">// 04</span><h2>Вопросы</h2></div>
+    <div class="sec-head"><span class="tag">// 04</span><h2 data-i18n="h.faq">Вопросы</h2></div>
     <div class="faq">
-      <details class="panel"><summary>Игра бесплатная?</summary><p>Да. Скачать и играть — бесплатно.</p></details>
-      <details class="panel"><summary>Сохранится ли прогресс после беты?</summary><p>Предметы с жёлтым клеймом беты остаются навсегда. Остальное, что выдано на время теста, возможно, будет сброшено к релизу.</p></details>
-      <details class="panel"><summary>Почему нужен вход через Google?</summary><p>Так твой аккаунт, инвентарь и прогресс живут на сервере: можно переставить игру или играть с другого устройства.</p></details>
-      <details class="panel"><summary>Нашёл баг — куда писать?</summary><p>Прямо в игре: кнопка «Сообщить об ошибке» в меню паузы или клавиша <span class="k mono">F7</span> на ПК — автор получит скриншот и лог. Или пиши в чат тестеров в Телеграме.</p></details>
-      <details class="panel"><summary>Когда выйдет в Google Play / Steam?</summary><p>После беты. Все новости — в Телеграм-канале.</p></details>
-      <details class="panel"><summary>Как обновить игру?</summary><p>Когда выйдет новая версия, игра сама скажет «Обновите игру». Скачай свежий файл с этой страницы — ссылки всегда ведут на последнюю версию.</p></details>
+      <details class="panel"><summary data-i18n="q1">Игра бесплатная?</summary><p data-i18n="a1">Да. Скачать и играть — бесплатно.</p></details>
+      <details class="panel"><summary data-i18n="q2">Сохранится ли прогресс после беты?</summary><p data-i18n="a2">Предметы с жёлтым клеймом беты остаются навсегда. Остальное, что выдано на время теста, возможно, будет сброшено к релизу.</p></details>
+      <details class="panel"><summary data-i18n="q3">Почему нужен вход через Google?</summary><p data-i18n="a3">Так твой аккаунт, инвентарь и прогресс живут на сервере: можно переставить игру или играть с другого устройства.</p></details>
+      <details class="panel"><summary data-i18n="q4">Нашёл баг — куда писать?</summary><p data-i18n="a4">Прямо в игре: кнопка «Сообщить об ошибке» в меню паузы или клавиша <span class="k mono">F7</span> на ПК — автор получит скриншот и лог. Или пиши в чат тестеров в Телеграме.</p></details>
+      <details class="panel"><summary data-i18n="q5">Когда выйдет в Google Play / Steam?</summary><p data-i18n="a5">После беты. Все новости — в Телеграм-канале.</p></details>
+      <details class="panel"><summary data-i18n="q6">Как обновить игру?</summary><p data-i18n="a6">Когда выйдет новая версия, игра сама скажет «Обновите игру». Скачай свежий файл с этой страницы — ссылки всегда ведут на последнюю версию.</p></details>
     </div>
   </div>
 </section>
@@ -320,8 +327,8 @@ footer .links { margin-left:auto; display:flex; gap:18px; flex-wrap:wrap; }
   <div class="wrap">
     <div class="panel tgband">
       <svg width="54" height="54" style="color:var(--tg);flex:none"><use href="#i-tg"/></svg>
-      <div><h3>Канал и чат тестеров</h3><p>Новости, обновления, поиск напарников и прямая связь с автором.</p></div>
-      <a class="btn btn--tg btn--big" data-link="telegram" href="#"><svg><use href="#i-tg"/></svg>Подписаться</a>
+      <div><h3 data-i18n="tg.title">Канал и чат тестеров</h3><p data-i18n="tg.text">Новости, обновления, поиск напарников и прямая связь с автором.</p></div>
+      <a class="btn btn--tg btn--big" data-link="telegram" href="#"><svg><use href="#i-tg"/></svg><span data-i18n="tg.join">Подписаться</span></a>
     </div>
   </div>
 </section>
@@ -329,8 +336,8 @@ footer .links { margin-left:auto; display:flex; gap:18px; flex-wrap:wrap; }
 <footer>
   <div class="wrap">
     <div class="studio">SPYLKO<small>Independent collective</small></div>
-    <span>Placeholder — инди-проект. Бета-версия, возможны баги.</span>
-    <div class="links"><a data-link="telegram" href="#">Телеграм</a><a data-link="privacy" href="privacy.html">Конфиденциальность</a><a data-link="terms" href="terms.html">Условия</a></div>
+    <span data-i18n="footer">Placeholder — инди-проект. Бета-версия, возможны баги.</span>
+    <div class="links"><a data-link="telegram" href="#" data-i18n="tg">Телеграм</a><a data-link="privacy" href="privacy.html" data-i18n="privacy">Конфиденциальность</a><a data-link="terms" href="terms.html" data-i18n="terms">Условия</a></div>
   </div>
 </footer>
 
@@ -342,34 +349,110 @@ footer .links { margin-left:auto; display:flex; gap:18px; flex-wrap:wrap; }
    upload files with exactly these names to each new release. */
 const SITE = {
   version: "0.0.56 beta",
-  date: "18 ноября 2026",
+  date: { ru: "18 ноября 2026", en: "November 18, 2026" },
   links: {
-    // "" = the button says «Скоро» and is not clickable (no file in the release yet)
+    // "" = the button says «Скоро» / "Soon" and is not clickable (no file in the release yet)
     windows:  "",   // "https://github.com/sprivolk/placeholder-shooter/releases/latest/download/Placeholder-Windows.zip"
     android:  "https://github.com/sprivolk/placeholder-shooter/releases/latest/download/Placeholder.apk",
     telegram: "https://t.me/placeholder_shooter",
     privacy:  "privacy.html",
     terms:    "terms.html"
   },
-  sizes: { windows: "ZIP · ~165 МБ", android: "APK · ~165 МБ" }
+  sizes: { windows: ["ZIP", 165], android: ["APK", 165] }   // [type, MB]
 };
+
+/* English texts. The Russian ones are the page itself (read from it at load): a Russian edit is made in the HTML,
+   an English one here, under the same key. */
+const EN = {
+  "title": "Placeholder — open beta",
+  "description": "Placeholder is a 5v5 tactical shooter for phones and PC. Open beta: download for Windows or Android.",
+  "nav.download": "Download", "nav.install": "Install", "nav.support": "Support", "nav.faq": "FAQ",
+  "tg": "Telegram",
+  "badge": "Open beta",
+  "lead": "A 5v5 tactical shooter for phones and PC. Bomb plants, round economy, grenades — and all of it free.",
+  "dl.win": "Download for Windows", "dl.android": "Download for Android",
+  "soon": "Soon", "mb": "MB",
+  "ios": "No iPhone version yet — follow the news in our Telegram.",
+  "ver": "Version", "updated": "Updated", "howto": "How to install →",
+  "h.shots": "Screenshots", "h.install": "How to install", "h.support": "Support the developers", "h.faq": "FAQ",
+  "install.lead": "The game isn't in the stores yet, so your system will warn you about an “unknown app”. That's normal — here's what to tap, step by step.",
+  "step1": "Download <b>Placeholder-Windows.zip</b> with the button at the top of the page.",
+  "step2": "Right-click the archive → <b>“Extract All”</b>. Don't run the game from inside the archive.",
+  "step3": "Open the folder and run <span class=\"k\">PlaceholderShooter.exe</span>.",
+  "step4": "If a blue <b>“Windows protected your PC”</b> window appears, click <span class=\"k\">More info</span>, then <span class=\"k\">Run anyway</span>.",
+  "step5": "Sign in with Google — and you're in.",
+  "step6": "Download <b>Placeholder.apk</b> with the button at the top of the page (or from the pinned post in Telegram).",
+  "step7": "Open the downloaded file. Your phone will ask for permission — tap <span class=\"k\">Settings</span> and turn on <b>“Allow from this source”</b>.",
+  "step8": "Go back and tap <span class=\"k\">Install</span>.",
+  "step9": "If Play Protect warns about an unknown app — <span class=\"k\">More details</span> → <span class=\"k\">Install anyway</span>.",
+  "step10": "To update, just install the new APK over the old one — your progress is kept on the server.",
+  "warn1": "Your antivirus may complain about a new game without a digital signature. Only download from the links on this page or in our Telegram.",
+  "warn2": "On Xiaomi (MIUI / HyperOS) you may need to confirm the installation once more in a separate window.",
+  "support.lead": "The game is made by a small independent team. Donations will go to match servers and to developing the game.",
+  "support.badge": "In development",
+  "support.text": "Ways to support aren't available yet — they'll appear here and in our Telegram soon.",
+  "q1": "Is the game free?", "a1": "Yes. Downloading and playing is free.",
+  "q2": "Will my progress carry over after the beta?",
+  "a2": "Items with the yellow beta stamp stay with you forever. Everything else given out for the test may be reset before release.",
+  "q3": "Why do I need to sign in with Google?",
+  "a3": "That way your account, inventory and progress live on the server: you can reinstall the game or play from another device.",
+  "q4": "Found a bug — where do I report it?",
+  "a4": "Right in the game: the “Report a bug” button in the pause menu, or the <span class=\"k mono\">F7</span> key on PC — the developers get a screenshot and a log. Or write in the testers' chat on Telegram.",
+  "q5": "When will it be on Google Play / Steam?", "a5": "After the beta. All the news is in our Telegram channel.",
+  "q6": "How do I update the game?",
+  "a6": "When a new version is out, the game will tell you to update. Download the fresh file from this page — the links always point to the latest version.",
+  "tg.title": "Channel and testers' chat", "tg.text": "News, updates, finding teammates and a direct line to the developers.", "tg.join": "Join",
+  "footer": "Placeholder is an indie project. Beta version — bugs are possible.",
+  "privacy": "Privacy", "terms": "Terms",
+  "alt1": "Shooting on the training map", "alt2": "Smoke grenade", "alt3": "Training arena from above", "alt4": "Cover", "alt5": "Knife in a corridor"
+};
+const RU_EXTRA = { "soon": "Скоро", "mb": "МБ" };
 /* ==================================================== */
 
-document.querySelectorAll("[data-field]").forEach(e => e.textContent = SITE[e.dataset.field]);
-document.querySelectorAll("[data-size]").forEach(e => e.textContent = SITE.sizes[e.dataset.size] || "—");
+// Russian texts = what the page has now.
+const RU = Object.assign({ title: document.title, description: document.querySelector('meta[name="description"]').content }, RU_EXTRA);
+document.querySelectorAll("[data-i18n]").forEach(e => { if (!(e.dataset.i18n in RU)) RU[e.dataset.i18n] = e.innerHTML; });
+document.querySelectorAll("[data-i18n-alt]").forEach(e => { if (!(e.dataset.i18nAlt in RU)) RU[e.dataset.i18nAlt] = e.alt; });
+
+document.querySelectorAll("[data-field]").forEach(e => { if (typeof SITE[e.dataset.field] === "string") e.textContent = SITE[e.dataset.field]; });
 document.querySelectorAll("[data-link]").forEach(a => {
   const url = SITE.links[a.dataset.link];
   if (url) { a.href = url; if (/^https?:/.test(url) && !/github\.com/.test(url)) { a.target = "_blank"; a.rel = "noopener"; } }
 });
 
-// A platform whose file is not out yet: «Скоро», not clickable.
+// A platform whose file is not out yet: «Скоро» / "Soon", not clickable.
 const cta = document.getElementById("cta");
 cta.querySelectorAll("[data-platform]").forEach(b => {
   if (SITE.links[b.dataset.platform]) return;
-  b.classList.add("is-soon"); b.classList.remove("btn--primary"); b.removeAttribute("href");
-  b.querySelector(".sub").textContent = "Скоро"; cta.append(b);
+  b.classList.add("is-soon"); b.classList.remove("btn--primary"); b.removeAttribute("href"); cta.append(b);
 });
 if (!SITE.links.windows) cta.querySelector('[data-platform="android"]').classList.add("btn--primary");
+
+// Language: the visitor's own choice, else ?lang=, else the browser's (Russian for ru/uk/be/kk, English otherwise).
+function pickLang() {
+  try { const saved = localStorage.getItem("lang"); if (saved === "ru" || saved === "en") return saved; } catch (e) {}
+  const q = new URLSearchParams(location.search).get("lang"); if (q === "ru" || q === "en") return q;
+  const langs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || "en"];
+  return langs.some(l => /^(ru|uk|be|kk)\b/i.test(l)) ? "ru" : "en";
+}
+function setLang(lang, remember) {
+  const T = lang === "en" ? EN : RU;
+  const t = k => (k in T ? T[k] : RU[k]);
+  document.documentElement.lang = lang;
+  document.title = t("title");
+  document.querySelector('meta[name="description"]').content = t("description");
+  document.querySelectorAll("[data-i18n]").forEach(e => e.innerHTML = t(e.dataset.i18n));
+  document.querySelectorAll("[data-i18n-alt]").forEach(e => e.alt = t(e.dataset.i18nAlt));
+  document.querySelectorAll("[data-size]").forEach(e => {
+    const platform = e.dataset.size, size = SITE.sizes[platform];
+    e.textContent = !SITE.links[platform] ? t("soon") : size ? size[0] + " · ~" + size[1] + " " + t("mb") : "";
+  });
+  document.querySelectorAll("[data-date]").forEach(e => e.textContent = SITE.date[lang]);
+  document.querySelectorAll("[data-lang]").forEach(b => b.classList.toggle("is-on", b.dataset.lang === lang));
+  if (remember) { try { localStorage.setItem("lang", lang); } catch (e) {} }
+}
+document.querySelectorAll("[data-lang]").forEach(b => b.onclick = () => setLang(b.dataset.lang, true));
+setLang(pickLang(), false);
 
 // Platform: phone users get the APK button first; iPhone users get a note.
 const ua = navigator.userAgent;
