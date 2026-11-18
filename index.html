@@ -1,37 +1,397 @@
 <!doctype html>
-<html lang="en">
+<html lang="ru">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Placeholder Shooter</title>
-<link rel="stylesheet" href="style.css">
+<title>Placeholder — открытый бета-тест</title>
+<meta name="description" content="Placeholder — тактический шутер 5×5 для телефона и ПК. Открытый бета-тест: скачай для Windows или Android.">
+<meta property="og:title" content="Placeholder — открытый бета-тест">
+<meta property="og:description" content="Тактический шутер 5×5 для телефона и ПК. Скачай бету бесплатно.">
+<meta property="og:image" content="https://sprivolk.github.io/img/hero.jpg">
+<meta property="og:url" content="https://sprivolk.github.io/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#07090b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Play:wght@700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Same tokens as the game's UI kit (Docs/MobileUi/kit.css): dark steel, green accent, square 3 px corners. */
+:root {
+  color-scheme: dark;
+  --bg-000:#07090b; --bg-100:#0c0f12; --bg-200:#12161a; --bg-300:#191e23; --bg-400:#222930;
+  --line-100:#1f252b; --line-200:#343d46; --line-300:#5a6773;
+  --text-100:#eef2f4; --text-200:#aab4bb; --text-300:#808b94;
+  --accent-500:#3aa34a; --accent-text:#4cc95e; --accent-line:#86e894; --accent-base:#1f6a2b;
+  --warning-500:#e0b84c; --news-500:#4a90d9; --tg:#2aabee; --mono-yellow:#ffd23f; --ton:#0098ea;
+  --radius:3px;
+  --fill-steel:linear-gradient(180deg,#56626e,#3b4550); --edge-steel:#7c8995;
+  --fill-green:linear-gradient(180deg,#5cd36d 0%,#3aa34a 55%,#2f9140 100%);
+  --panel:linear-gradient(180deg,#1a2027,#11151a); --panel-edge:rgba(255,255,255,.08); --panel-top:rgba(255,255,255,.14);
+  --well:#0a0d10; --well-edge:rgba(255,255,255,.10);
+  --font-text:"Inter",system-ui,sans-serif; --font-display:"Play","Inter",sans-serif; --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  --wrap:1120px;
+}
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { margin:0; background:var(--bg-000); color:var(--text-100); font:400 16px/1.55 var(--font-text); -webkit-font-smoothing:antialiased; }
+a { color:var(--accent-text); text-decoration:none; }
+a:hover { text-decoration:underline; }
+img { display:block; max-width:100%; }
+.wrap { max-width:var(--wrap); margin:0 auto; padding:0 24px; }
+.display { font-family:var(--font-display); font-weight:700; letter-spacing:1.5px; text-transform:uppercase; }
+.mono { font-family:var(--font-mono); }
+.muted { color:var(--text-300); }
+
+/* ---------- Buttons (game look) ---------- */
+.btn { height:50px; padding:0 22px; display:inline-flex; align-items:center; justify-content:center; gap:10px;
+  font:800 14px var(--font-text); letter-spacing:1.1px; text-transform:uppercase; color:#fff; cursor:pointer; white-space:nowrap;
+  background:var(--fill-steel); border:1px solid var(--edge-steel); border-bottom-color:#2a3138; border-radius:var(--radius);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22), 0 3px 8px rgba(0,0,0,.35); text-shadow:0 1px 0 rgba(0,0,0,.35);
+  transition:transform .08s ease-out, filter .1s; user-select:none; text-decoration:none !important; }
+.btn:hover { filter:brightness(1.12); }
+.btn:active { transform:translateY(1px) scale(.97); filter:brightness(.9); }
+.btn svg { width:20px; height:20px; flex:none; }
+.btn--primary { background:var(--fill-green); border-color:var(--accent-line); border-bottom-color:var(--accent-base);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.3), inset 0 -3px 0 rgba(0,0,0,.18), 0 4px 14px rgba(0,0,0,.45), 0 0 22px rgba(76,201,94,.22); }
+.btn.is-soon { opacity:.5; cursor:default; filter:grayscale(.6); pointer-events:none; }
+.btn--ghost { background:rgba(255,255,255,.03); border:1.5px solid rgba(255,255,255,.4); box-shadow:none; }
+.btn--tg { background:linear-gradient(180deg,#3cb8f5,#1d93d2); border-color:#8fd6fb; border-bottom-color:#126a99; }
+.btn--sm { height:38px; padding:0 14px; font-size:12px; }
+.btn--big { height:64px; padding:0 26px; font-size:15px; }
+.btn--big .sub { display:block; font:500 11px var(--font-mono); letter-spacing:.3px; text-transform:none; opacity:.85; margin-top:1px; }
+.btn--big .lbl { display:flex; flex-direction:column; align-items:flex-start; line-height:1.2; }
+
+/* ---------- Top bar ---------- */
+.top { position:sticky; top:0; z-index:20; background:rgba(7,9,11,.86); backdrop-filter:blur(8px); border-bottom:1px solid var(--line-100); }
+.top .wrap { height:60px; display:flex; align-items:center; gap:28px; }
+.logo { font:700 22px var(--font-display); letter-spacing:2px; color:#fff; text-transform:uppercase; display:flex; align-items:center; gap:10px; }
+.logo i { width:12px; height:12px; background:var(--accent-text); box-shadow:0 0 12px rgba(76,201,94,.6); display:block; }
+.nav { display:flex; gap:22px; margin-left:auto; }
+.nav a { color:var(--text-200); font:700 13px var(--font-text); letter-spacing:1px; text-transform:uppercase; }
+.nav a:hover { color:#fff; text-decoration:none; }
+
+/* ---------- Hero ---------- */
+.hero { position:relative; min-height:640px; display:flex; align-items:flex-end; overflow:hidden; border-bottom:1px solid var(--line-100); }
+.hero__bg { position:absolute; inset:0; background:url(img/hero.jpg) center 40%/cover no-repeat; }
+.hero__bg::after { content:""; position:absolute; inset:0;
+  background:linear-gradient(90deg,rgba(7,9,11,.94) 0%,rgba(7,9,11,.78) 38%,rgba(7,9,11,.15) 75%), linear-gradient(0deg,var(--bg-000) 0%,rgba(7,9,11,0) 40%); }
+.hero .wrap { position:relative; width:100%; padding-top:90px; padding-bottom:70px; }
+.badge { display:inline-flex; align-items:center; gap:8px; height:30px; padding:0 12px; border-radius:var(--radius);
+  background:rgba(76,201,94,.12); border:1px solid rgba(134,232,148,.45); color:var(--accent-line); font:800 12px var(--font-text); letter-spacing:1.4px; text-transform:uppercase; }
+.badge .pulse { width:8px; height:8px; border-radius:4px; background:var(--accent-text); animation:pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{ box-shadow:0 0 0 0 rgba(76,201,94,.6);} 50%{ box-shadow:0 0 0 6px rgba(76,201,94,0);} }
+.hero h1 { margin:18px 0 6px; font:700 clamp(48px,9vw,104px)/0.95 var(--font-display); letter-spacing:3px; text-transform:uppercase; }
+.hero h1 span { color:var(--accent-text); text-shadow:0 0 30px rgba(76,201,94,.35); }
+.hero .lead { max-width:520px; font-size:19px; color:var(--text-200); margin:14px 0 30px; }
+.cta { display:flex; flex-wrap:wrap; gap:12px; }
+.ver { margin-top:18px; font:500 13px var(--font-mono); color:var(--text-300); display:flex; flex-wrap:wrap; gap:6px 18px; }
+.ver b { color:var(--text-200); font-weight:500; }
+.ios-note { display:none; margin-top:14px; font-size:14px; color:var(--warning-500); }
+
+/* ---------- Sections ---------- */
+section { padding:84px 0; }
+.sec-head { display:flex; align-items:baseline; gap:16px; margin-bottom:34px; flex-wrap:wrap; }
+.sec-head h2 { margin:0; font:700 34px var(--font-display); letter-spacing:2px; text-transform:uppercase; }
+.sec-head .tag { font:500 13px var(--font-mono); color:var(--accent-text); }
+.sec-head p { flex:0 0 100%; margin:6px 0 0; color:var(--text-300); padding-right:calc(100% - 640px); }
+[id] { scroll-margin-top:64px; }
+.alt { background:var(--bg-100); border-top:1px solid var(--line-100); border-bottom:1px solid var(--line-100); }
+
+.panel { background:var(--panel); border:1px solid var(--panel-edge); border-top-color:var(--panel-top); border-radius:var(--radius); }
+
+/* Gallery */
+.gallery { display:grid; grid-template-columns:2fr 1fr; grid-template-rows:1fr 1fr; gap:10px; }
+.gallery figure, .gallery-row figure { margin:0; position:relative; overflow:hidden; border-radius:var(--radius); border:1px solid var(--line-200); background:var(--bg-200); cursor:zoom-in; }
+.gallery figure:first-child { grid-row:span 2; }
+.gallery img, .gallery-row img { width:100%; height:100%; object-fit:cover; transition:transform .3s; aspect-ratio:16/9; }
+.gallery figure:hover img, .gallery-row figure:hover img { transform:scale(1.03); }
+.gallery-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
+.lightbox { position:fixed; inset:0; z-index:50; background:rgba(0,0,0,.9); display:none; align-items:center; justify-content:center; padding:24px; cursor:zoom-out; }
+.lightbox.is-open { display:flex; }
+.lightbox img { max-height:92vh; border-radius:var(--radius); }
+
+/* Install */
+.tabs { display:flex; gap:4px; border-bottom:1px solid rgba(255,255,255,.1); margin-bottom:26px; }
+.tab { height:48px; padding:0 18px; background:none; border:0; border-bottom:3px solid transparent; cursor:pointer; color:var(--text-300);
+  font:800 14px var(--font-text); letter-spacing:1.1px; text-transform:uppercase; display:flex; align-items:center; gap:8px; }
+.tab svg { width:18px; height:18px; }
+.tab:hover { color:#fff; }
+.tab.is-active { color:#fff; border-bottom-color:var(--accent-text); text-shadow:0 0 12px rgba(76,201,94,.35); }
+.pane { display:none; }
+.pane.is-active { display:grid; grid-template-columns:1.4fr 1fr; gap:24px; align-items:start; }
+.steps { counter-reset:s; list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; }
+.steps li { counter-increment:s; position:relative; padding:16px 18px 16px 64px; }
+.steps li::before { content:counter(s); position:absolute; left:16px; top:14px; width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+  font:700 16px var(--font-display); background:var(--well); border:1px solid var(--accent-base); color:var(--accent-text); border-radius:var(--radius); }
+.steps b { color:#fff; }
+.steps .k { font:500 13px var(--font-mono); background:var(--well); border:1px solid var(--well-edge); padding:1px 6px; border-radius:2px; color:var(--text-100); white-space:nowrap; }
+.side { padding:22px; }
+.side h4 { margin:0 0 12px; font:800 13px var(--font-text); letter-spacing:1.2px; text-transform:uppercase; color:var(--text-200); }
+.warn { padding:12px 14px; border-left:3px solid var(--warning-500); background:rgba(224,184,76,.07); font-size:14px; color:var(--text-200); border-radius:0 var(--radius) var(--radius) 0; }
+
+/* Support (payments not ready yet) */
+.soon { padding:26px; display:flex; gap:18px; align-items:center; flex-wrap:wrap; }
+.soon p { margin:0; flex:1; min-width:220px; color:var(--text-200); }
+.badge--wait { background:rgba(224,184,76,.1); border-color:rgba(224,184,76,.5); color:var(--warning-500); }
+.badge--wait .pulse { background:var(--warning-500); animation:none; }
+
+/* FAQ */
+.faq { display:flex; flex-direction:column; gap:8px; max-width:820px; }
+.faq details { padding:0; }
+.faq summary { list-style:none; cursor:pointer; padding:18px 52px 18px 20px; position:relative; font:700 16px var(--font-text); }
+.faq summary::-webkit-details-marker { display:none; }
+.faq summary::after { content:"+"; position:absolute; right:20px; top:12px; font:700 24px var(--font-display); color:var(--accent-text); }
+.faq details[open] summary::after { content:"−"; }
+.faq details p { margin:0; padding:0 20px 18px; color:var(--text-200); }
+
+/* Telegram band */
+.tgband { padding:34px; display:flex; gap:26px; align-items:center; flex-wrap:wrap;
+  background:linear-gradient(120deg,rgba(42,171,238,.16),rgba(42,171,238,.03) 60%), var(--panel); border-color:rgba(42,171,238,.35); }
+.tgband h3 { margin:0 0 4px; font:700 26px var(--font-display); letter-spacing:1.5px; text-transform:uppercase; }
+.tgband p { margin:0; color:var(--text-200); }
+.tgband > div { flex:1; min-width:240px; }
+
+footer { padding:40px 0 50px; border-top:1px solid var(--line-100); color:var(--text-300); font-size:14px; }
+footer .wrap { display:flex; gap:20px; flex-wrap:wrap; align-items:center; }
+footer .studio { font:700 18px var(--font-display); letter-spacing:3px; color:var(--text-200); }
+footer .studio small { display:block; font:600 9px var(--font-text); letter-spacing:3px; color:var(--text-300); }
+footer .links { margin-left:auto; display:flex; gap:18px; flex-wrap:wrap; }
+
+
+/* ---------- Phone ---------- */
+@media (max-width:900px) {
+  .pane.is-active { grid-template-columns:1fr; }
+}
+@media (max-width:640px) {
+  .wrap { padding:0 16px; }
+  .nav { display:none; }
+  .top .wrap { gap:12px; }
+  .top .btn { margin-left:auto; }
+  .logo { font-size:19px; letter-spacing:1.5px; }
+  .hero h1 { font-size:clamp(36px,11.2vw,60px); letter-spacing:1px; }
+  .hero { min-height:0; }
+  .hero__bg { background-position:62% center; }
+  .hero__bg::after { background:linear-gradient(0deg,var(--bg-000) 8%,rgba(7,9,11,.82) 55%,rgba(7,9,11,.45) 100%); }
+  .hero .wrap { padding-top:150px; padding-bottom:44px; }
+  .hero .lead { font-size:17px; }
+  .cta .btn { width:100%; justify-content:flex-start; }
+  section { padding:60px 0; }
+  .sec-head h2 { font-size:28px; }
+  .gallery { grid-template-columns:1fr; grid-template-rows:auto; }
+  .gallery figure:first-child { grid-row:auto; }
+  .gallery-row { grid-template-columns:1fr; }
+  .tab { padding:0 12px; font-size:13px; }
+  .steps li { padding:14px 14px 14px 58px; }
+  .tgband { padding:24px; }
+  .tgband .btn { width:100%; }
+  footer .links { margin-left:0; }
+}
+</style>
 </head>
 <body>
-<main>
-  <h1>Placeholder Shooter</h1>
-  <p class="muted">A tactical multiplayer shooter for PC and Android, in closed testing.</p>
-  <nav>
-    <a href="privacy.html">Privacy policy</a>
-    <a href="terms.html">Terms of service</a>
-  </nav>
 
-  <section class="lang">
-    <h2>About</h2>
-    <p>Placeholder Shooter is an indie team shooter in the spirit of classic competitive shooters: rounds, bomb defusal,
-      a training map, skins and cases. It is made by one developer and is being tested by a small community before release.</p>
-    <p>Signing in with Google keeps your account, inventory and match history the same on all your devices.
-      You can also play as a guest without an account.</p>
-  </section>
+<!-- Icons -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-win" viewBox="0 0 24 24"><path fill="currentColor" d="M3 5.5 10.5 4.4v7.1H3zm8.5-1.2L21 3v8.5h-9.5zM3 12.5h7.5v7.1L3 18.5zm8.5 0H21V21l-9.5-1.3z"/></symbol>
+  <symbol id="i-android" viewBox="0 0 24 24"><path fill="currentColor" d="M17.6 9.5 19.4 6.4a.4.4 0 0 0-.7-.4l-1.8 3.1A11 11 0 0 0 12 8a11 11 0 0 0-4.9 1.1L5.3 6a.4.4 0 0 0-.7.4l1.8 3.1A9.6 9.6 0 0 0 1.5 17h21a9.6 9.6 0 0 0-4.9-7.5zM7 14.3a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm10 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></symbol>
+  <symbol id="i-tg" viewBox="0 0 24 24"><path fill="currentColor" d="M21.9 4.3 18.8 19c-.2 1-.8 1.3-1.7.8l-4.6-3.4-2.2 2.1c-.3.3-.5.5-1 .5l.3-4.7 8.6-7.8c.4-.3-.1-.5-.6-.2L6.9 13 2.3 11.6c-1-.3-1-1 .2-1.5l18-6.9c.8-.3 1.6.2 1.4 1.1z"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M8 8h12v12H8zM4 16V4h12"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path fill="currentColor" d="M12 21s-7.5-4.6-9.6-9.4C.9 8.1 3.2 4.5 6.8 4.5c2.1 0 3.5 1.1 4.2 2.3h2c.7-1.2 2.1-2.3 4.2-2.3 3.6 0 5.9 3.6 4.4 7.1C19.5 16.4 12 21 12 21z"/></symbol>
+</svg>
 
-  <section class="lang" lang="ru">
-    <h2>Об игре</h2>
-    <p>Placeholder Shooter — инди-шутер «команда на команду» в духе классических соревновательных шутеров: раунды,
-      закладка и разминирование бомбы, тренировочная карта, скины и кейсы. Игру делает один разработчик, сейчас она на закрытом тесте.</p>
-    <p>Вход через Google сохраняет аккаунт, инвентарь и историю матчей одинаковыми на всех ваших устройствах.
-      Играть можно и гостем, без аккаунта.</p>
-  </section>
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#"><i></i>Placeholder</a>
+    <nav class="nav">
+      <a href="#download">Скачать</a>
+      <a href="#install">Установка</a>
+      <a href="#support">Поддержать</a>
+      <a href="#faq">Вопросы</a>
+    </nav>
+    <a class="btn btn--tg btn--sm" data-link="telegram" href="#"><svg><use href="#i-tg"/></svg>Телеграм</a>
+  </div>
+</header>
 
-  <footer>© 2026 Placeholder Shooter · <a href="https://github.com/sprivolk">github.com/sprivolk</a></footer>
-</main>
+<!-- ===== Hero ===== -->
+<div class="hero" id="download">
+  <div class="hero__bg"></div>
+  <div class="wrap">
+    <span class="badge"><span class="pulse"></span>Открытый бета-тест</span>
+    <h1>Place<span>holder</span></h1>
+    <p class="lead">Тактический шутер 5×5 для телефона и ПК. Закладка бомбы, экономика раундов, гранаты — и всё это бесплатно.</p>
+    <div class="cta" id="cta">
+      <a class="btn btn--primary btn--big" data-link="windows" data-platform="windows" href="#">
+        <svg><use href="#i-win"/></svg>
+        <span class="lbl">Скачать для Windows<span class="sub" data-size="windows">ZIP · — МБ</span></span>
+      </a>
+      <a class="btn btn--big" data-link="android" data-platform="android" href="#">
+        <svg><use href="#i-android"/></svg>
+        <span class="lbl">Скачать для Android<span class="sub" data-size="android">APK · — МБ</span></span>
+      </a>
+    </div>
+    <div class="ios-note">На iPhone игры пока нет — следи за новостями в Телеграме.</div>
+    <div class="ver"><span>Версия <b data-field="version">—</b></span><span>Обновлено <b data-field="date">—</b></span><a href="#install">Как установить →</a></div>
+  </div>
+</div>
+
+<!-- ===== Gallery ===== -->
+<section class="alt">
+  <div class="wrap">
+    <div class="sec-head"><span class="tag">// 01</span><h2>Скриншоты</h2></div>
+    <div class="gallery">
+      <figure><img src="img/hero.jpg" alt="Стрельба на тренировочной карте" loading="lazy"></figure>
+      <figure><img src="img/smoke.jpg" alt="Дымовая граната" loading="lazy"></figure>
+      <figure><img src="img/arena.jpg" alt="Тренировочная арена сверху" loading="lazy"></figure>
+    </div>
+    <div class="gallery-row">
+      <figure><img src="img/props.jpg" alt="Укрытия" loading="lazy"></figure>
+      <figure><img src="img/room.jpg" alt="Нож в коридоре" loading="lazy"></figure>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Install ===== -->
+<section id="install">
+  <div class="wrap">
+    <div class="sec-head"><span class="tag">// 02</span><h2>Как установить</h2>
+      <p>Игры пока нет в магазинах, поэтому система предупредит о «неизвестном приложении». Это нормально — ниже по шагам, что нажать.</p></div>
+    <div class="tabs" role="tablist">
+      <button class="tab" data-tab="windows"><svg><use href="#i-win"/></svg>Windows</button>
+      <button class="tab" data-tab="android"><svg><use href="#i-android"/></svg>Android</button>
+    </div>
+
+    <div class="pane" data-pane="windows">
+      <ol class="steps">
+        <li class="panel">Скачай архив <b>Placeholder-Windows.zip</b> кнопкой вверху страницы.</li>
+        <li class="panel">Нажми на архив правой кнопкой → <b>«Извлечь всё»</b>. Не запускай игру прямо из архива.</li>
+        <li class="panel">Открой папку и запусти <span class="k">PlaceholderShooter.exe</span>.</li>
+        <li class="panel">Если появилось синее окно <b>«Windows защитил ваш компьютер»</b> — нажми <span class="k">Подробнее</span>, затем <span class="k">Выполнить в любом случае</span>.</li>
+        <li class="panel">Войди через Google — и в бой.</li>
+      </ol>
+      <div class="panel side">
+        <div class="warn">Антивирус может ругаться на новую игру без цифровой подписи. Скачивай только по ссылкам с этой страницы или из нашего Телеграма.</div>
+      </div>
+    </div>
+
+    <div class="pane" data-pane="android">
+      <ol class="steps">
+        <li class="panel">Скачай файл <b>Placeholder.apk</b> кнопкой вверху страницы (или из закрепа в Телеграме).</li>
+        <li class="panel">Открой скачанный файл. Телефон спросит разрешение — нажми <span class="k">Настройки</span> и включи <b>«Разрешить из этого источника»</b>.</li>
+        <li class="panel">Вернись назад и нажми <span class="k">Установить</span>.</li>
+        <li class="panel">Если Play Защита предупредит о неизвестном приложении — <span class="k">Подробнее</span> → <span class="k">Всё равно установить</span>.</li>
+        <li class="panel">Для обновления просто поставь новый APK поверх старого — прогресс хранится на сервере.</li>
+      </ol>
+      <div class="panel side">
+        <div class="warn">На Xiaomi (MIUI / HyperOS) может понадобиться ещё раз подтвердить установку в отдельном окне.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Support ===== -->
+<section class="alt" id="support">
+  <div class="wrap">
+    <div class="sec-head"><span class="tag">// 03</span><h2>Поддержать автора</h2>
+      <p>Игру делает маленькая независимая команда. Донаты пойдут на сервера для матчей и на развитие игры.</p></div>
+    <div class="panel soon">
+      <span class="badge badge--wait"><span class="pulse"></span>В разработке</span>
+      <p>Способы поддержки пока недоступны — скоро появятся здесь и в нашем Телеграме.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FAQ ===== -->
+<section id="faq">
+  <div class="wrap">
+    <div class="sec-head"><span class="tag">// 04</span><h2>Вопросы</h2></div>
+    <div class="faq">
+      <details class="panel"><summary>Игра бесплатная?</summary><p>Да. Скачать и играть — бесплатно.</p></details>
+      <details class="panel"><summary>Сохранится ли прогресс после беты?</summary><p>Предметы с жёлтым клеймом беты остаются навсегда. Остальное, что выдано на время теста, возможно, будет сброшено к релизу.</p></details>
+      <details class="panel"><summary>Почему нужен вход через Google?</summary><p>Так твой аккаунт, инвентарь и прогресс живут на сервере: можно переставить игру или играть с другого устройства.</p></details>
+      <details class="panel"><summary>Нашёл баг — куда писать?</summary><p>Прямо в игре: кнопка «Сообщить об ошибке» в меню паузы или клавиша <span class="k mono">F7</span> на ПК — автор получит скриншот и лог. Или пиши в чат тестеров в Телеграме.</p></details>
+      <details class="panel"><summary>Когда выйдет в Google Play / Steam?</summary><p>После беты. Все новости — в Телеграм-канале.</p></details>
+      <details class="panel"><summary>Как обновить игру?</summary><p>Когда выйдет новая версия, игра сама скажет «Обновите игру». Скачай свежий файл с этой страницы — ссылки всегда ведут на последнюю версию.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Telegram ===== -->
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="panel tgband">
+      <svg width="54" height="54" style="color:var(--tg);flex:none"><use href="#i-tg"/></svg>
+      <div><h3>Канал и чат тестеров</h3><p>Новости, обновления, поиск напарников и прямая связь с автором.</p></div>
+      <a class="btn btn--tg btn--big" data-link="telegram" href="#"><svg><use href="#i-tg"/></svg>Подписаться</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="studio">SPYLKO<small>Independent collective</small></div>
+    <span>Placeholder — инди-проект. Бета-версия, возможны баги.</span>
+    <div class="links"><a data-link="telegram" href="#">Телеграм</a><a data-link="privacy" href="privacy.html">Конфиденциальность</a><a data-link="terms" href="terms.html">Условия</a></div>
+  </div>
+</footer>
+
+<div class="lightbox" id="lightbox"><img alt=""></div>
+
+<script>
+/* ============ EVERYTHING TO EDIT IS HERE ============
+   Download links point at GitHub "latest" assets, so they never change between releases:
+   upload files with exactly these names to each new release. */
+const SITE = {
+  version: "0.0.56 beta",
+  date: "18 ноября 2026",
+  links: {
+    // "" = the button says «Скоро» and is not clickable (no file in the release yet)
+    windows:  "",   // "https://github.com/sprivolk/placeholder-shooter/releases/latest/download/Placeholder-Windows.zip"
+    android:  "https://github.com/sprivolk/placeholder-shooter/releases/latest/download/Placeholder.apk",
+    telegram: "https://t.me/placeholder_shooter",
+    privacy:  "privacy.html",
+    terms:    "terms.html"
+  },
+  sizes: { windows: "ZIP · ~165 МБ", android: "APK · ~165 МБ" }
+};
+/* ==================================================== */
+
+document.querySelectorAll("[data-field]").forEach(e => e.textContent = SITE[e.dataset.field]);
+document.querySelectorAll("[data-size]").forEach(e => e.textContent = SITE.sizes[e.dataset.size] || "—");
+document.querySelectorAll("[data-link]").forEach(a => {
+  const url = SITE.links[a.dataset.link];
+  if (url) { a.href = url; if (/^https?:/.test(url) && !/github\.com/.test(url)) { a.target = "_blank"; a.rel = "noopener"; } }
+});
+
+// A platform whose file is not out yet: «Скоро», not clickable.
+const cta = document.getElementById("cta");
+cta.querySelectorAll("[data-platform]").forEach(b => {
+  if (SITE.links[b.dataset.platform]) return;
+  b.classList.add("is-soon"); b.classList.remove("btn--primary"); b.removeAttribute("href");
+  b.querySelector(".sub").textContent = "Скоро"; cta.append(b);
+});
+if (!SITE.links.windows) cta.querySelector('[data-platform="android"]').classList.add("btn--primary");
+
+// Platform: phone users get the APK button first; iPhone users get a note.
+const ua = navigator.userAgent;
+const isAndroid = /Android/i.test(ua), isIOS = /iPhone|iPad|iPod/i.test(ua);
+if (isAndroid) {
+  const apk = cta.querySelector('[data-platform="android"]'), win = cta.querySelector('[data-platform="windows"]');
+  apk.classList.add("btn--primary"); win.classList.remove("btn--primary"); cta.prepend(apk);
+}
+if (isIOS) document.querySelector(".ios-note").style.display = "block";
+
+// Install tabs (opens on the visitor's platform).
+function showTab(name) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("is-active", t.dataset.tab === name));
+  document.querySelectorAll(".pane").forEach(p => p.classList.toggle("is-active", p.dataset.pane === name));
+}
+document.querySelectorAll(".tab").forEach(t => t.onclick = () => showTab(t.dataset.tab));
+showTab(isAndroid ? "android" : "windows");
+
+// Screenshot lightbox.
+const lb = document.getElementById("lightbox");
+document.querySelectorAll("figure img").forEach(img => img.parentElement.onclick = () => { lb.firstElementChild.src = img.src; lb.classList.add("is-open"); });
+lb.onclick = () => lb.classList.remove("is-open");
+</script>
 </body>
 </html>
