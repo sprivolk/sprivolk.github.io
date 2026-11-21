@@ -363,21 +363,22 @@ footer .links { margin-left:auto; display:flex; gap:18px; flex-wrap:wrap; }
 
 <script>
 /* ============ EVERYTHING TO EDIT IS HERE ============
-   Download links point at GitHub "latest" assets, so they never change between releases:
-   upload files with exactly these names to each new release. */
+   The builds chat rewrites this block at every release: version, date, sizes and the links to that release's files
+   (the files carry the version in their names, Placeholder-<v>.apk / Placeholder-Windows-<v>.zip, so a second download
+   never turns into "Placeholder (1).apk"). */
 const SITE = {
-  version: "0.0.56 beta",
-  date: { ru: "18 ноября 2026", en: "November 18, 2026" },
+  version: "0.0.3 beta",
+  date: { ru: "21 ноября 2026", en: "November 21, 2026" },
   links: {
     // "" = the button says «Скоро» / "Soon" and is not clickable (no file in the release yet)
-    windows:  "https://github.com/sprivolk/placeholder-shooter/releases/latest/download/Placeholder-Windows.zip",
-    android:  "https://github.com/sprivolk/placeholder-shooter/releases/latest/download/Placeholder.apk",
+    windows:  "https://github.com/sprivolk/placeholder-shooter/releases/download/v0.0.3/Placeholder-Windows-0.0.3.zip",
+    android:  "https://github.com/sprivolk/placeholder-shooter/releases/download/v0.0.3/Placeholder-0.0.3.apk",
     telegram: "https://t.me/placeholder_shooter",
     bot:      "https://t.me/placeholder_donate_bot",
     privacy:  "privacy.html",
     terms:    "terms.html"
   },
-  sizes: { windows: ["ZIP", 170], android: ["APK", 164] }   // [type, MB]
+  sizes: { windows: ["ZIP", 230], android: ["APK", 228] }   // [type, MB]
 };
 
 /* English texts. The Russian ones are the page itself (read from it at load): a Russian edit is made in the HTML,
