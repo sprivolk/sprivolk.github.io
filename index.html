@@ -136,6 +136,23 @@ section { padding:84px 0; }
 /* Support (payments not ready yet) */
 .soon { padding:26px; display:flex; gap:18px; align-items:center; flex-wrap:wrap; }
 .soon p { margin:0; flex:1; min-width:220px; color:var(--text-200); }
+/* «Поддержать»: bright green that glows and breathes, so players notice it (the author, 2026-11-21). */
+@keyframes supportGlow {
+  0%, 100% { text-shadow:0 0 6px rgba(92,255,120,.55), 0 0 14px rgba(76,201,94,.35); }
+  50% { text-shadow:0 0 10px rgba(92,255,120,.95), 0 0 24px rgba(76,201,94,.7), 0 0 40px rgba(76,201,94,.35); }
+}
+@keyframes supportPill {
+  0%, 100% { box-shadow:0 0 0 1px rgba(134,232,148,.55), 0 0 10px rgba(76,201,94,.35); }
+  50% { box-shadow:0 0 0 1px rgba(134,232,148,.95), 0 0 22px rgba(76,201,94,.75); }
+}
+.accent { color:#6dff86; animation:supportGlow 2.2s ease-in-out infinite; }
+.nav a.nav-accent { color:#6dff86; padding:6px 12px; border-radius:var(--radius); background:rgba(76,201,94,.12);
+  animation:supportGlow 2.2s ease-in-out infinite, supportPill 2.2s ease-in-out infinite; }
+.nav a.nav-accent:hover { color:#fff; background:rgba(76,201,94,.22); text-decoration:none; }
+#support .btn--primary { animation:supportPill 2.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .accent, .nav a.nav-accent, #support .btn--primary { animation:none; text-shadow:0 0 10px rgba(92,255,120,.8); }
+}
 .badge--wait { background:rgba(224,184,76,.1); border-color:rgba(224,184,76,.5); color:var(--warning-500); }
 .badge--wait .pulse { background:var(--warning-500); animation:none; }
 
@@ -211,7 +228,7 @@ footer .links { margin-left:auto; display:flex; gap:18px; flex-wrap:wrap; }
     <nav class="nav">
       <a href="#download" data-i18n="nav.download">Скачать</a>
       <a href="#install" data-i18n="nav.install">Установка</a>
-      <a href="#support" data-i18n="nav.support">Поддержать</a>
+      <a href="#support" class="nav-accent" data-i18n="nav.support">Поддержать</a>
       <a href="#faq" data-i18n="nav.faq">Вопросы</a>
     </nav>
     <div class="lang" role="group" aria-label="Language"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
@@ -298,11 +315,12 @@ footer .links { margin-left:auto; display:flex; gap:18px; flex-wrap:wrap; }
 <!-- ===== Support ===== -->
 <section class="alt" id="support">
   <div class="wrap">
-    <div class="sec-head"><span class="tag">// 03</span><h2 data-i18n="h.support">Поддержать автора</h2>
+    <div class="sec-head"><span class="tag">// 03</span><h2 data-i18n="h.support"><span class="accent">Поддержать</span> автора</h2>
       <p data-i18n="support.lead">Игру делает маленькая независимая команда. Донаты пойдут на сервера для матчей и на развитие игры.</p></div>
     <div class="panel soon">
-      <span class="badge badge--wait"><span class="pulse"></span><span data-i18n="support.badge">В разработке</span></span>
-      <p data-i18n="support.text">Способы поддержки пока недоступны — скоро появятся здесь и в нашем Телеграме.</p>
+      <span class="badge"><span class="pulse"></span><span data-i18n="support.badge">Через Telegram</span></span>
+      <p data-i18n="support.text"><span class="accent">Поддержать</span> игру и купить кредиты можно в нашем Telegram-боте — оплата звёздами Telegram, кредиты сразу приходят в игру.</p>
+      <a class="btn btn--primary" data-link="bot" href="#"><svg><use href="#i-tg"/></svg><span data-i18n="support.bot">Открыть бота</span></a>
     </div>
   </div>
 </section>
@@ -355,6 +373,7 @@ const SITE = {
     windows:  "https://github.com/sprivolk/placeholder-shooter/releases/latest/download/Placeholder-Windows.zip",
     android:  "https://github.com/sprivolk/placeholder-shooter/releases/latest/download/Placeholder.apk",
     telegram: "https://t.me/placeholder_shooter",
+    bot:      "https://t.me/placeholder_donate_bot",
     privacy:  "privacy.html",
     terms:    "terms.html"
   },
@@ -374,7 +393,7 @@ const EN = {
   "soon": "Soon", "mb": "MB",
   "ios": "No iPhone version yet — follow the news in our Telegram.",
   "ver": "Version", "updated": "Updated", "howto": "How to install →",
-  "h.shots": "Screenshots", "h.install": "How to install", "h.support": "Support the developers", "h.faq": "FAQ",
+  "h.shots": "Screenshots", "h.install": "How to install", "h.support": "<span class=\"accent\">Support</span> the developers", "h.faq": "FAQ",
   "install.lead": "The game isn't in the stores yet, so your system will warn you about an “unknown app”. That's normal — here's what to tap, step by step.",
   "step1": "Download <b>Placeholder-Windows.zip</b> with the button at the top of the page.",
   "step2": "Right-click the archive → <b>“Extract All”</b>. Don't run the game from inside the archive.",
@@ -389,8 +408,9 @@ const EN = {
   "warn1": "Your antivirus may complain about a new game without a digital signature. Only download from the links on this page or in our Telegram.",
   "warn2": "On Xiaomi (MIUI / HyperOS) you may need to confirm the installation once more in a separate window.",
   "support.lead": "The game is made by a small independent team. Donations will go to match servers and to developing the game.",
-  "support.badge": "In development",
-  "support.text": "Ways to support aren't available yet — they'll appear here and in our Telegram soon.",
+  "support.badge": "Via Telegram",
+  "support.text": "<span class=\"accent\">Support</span> the game and buy credits in our Telegram bot — you pay with Telegram Stars, the credits come to the game at once.",
+  "support.bot": "Open the bot",
   "q1": "Is the game free?", "a1": "Yes. Downloading and playing is free.",
   "q2": "Will my progress carry over after the beta?",
   "a2": "Items with the yellow beta stamp stay with you forever. Everything else given out for the test may be reset before release.",
