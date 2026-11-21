@@ -150,8 +150,16 @@ section { padding:84px 0; }
   animation:supportGlow 2.2s ease-in-out infinite, supportPill 2.2s ease-in-out infinite; }
 .nav a.nav-accent:hover { color:#fff; background:rgba(76,201,94,.22); text-decoration:none; }
 #support .btn--primary { animation:supportPill 2.2s ease-in-out infinite; }
+/* Phones (the nav is hidden there): a glowing «Поддержать проект» strip under the top bar (the author, 2026-11-21). */
+.top-support { display:none; align-items:center; justify-content:center; gap:8px; height:40px; margin:0 16px 8px;
+  color:#6dff86; font:800 13px var(--font-text); letter-spacing:1.2px; text-transform:uppercase;
+  background:rgba(76,201,94,.14); border-radius:var(--radius);
+  animation:supportGlow 2.2s ease-in-out infinite, supportPill 2.2s ease-in-out infinite; }
+.top-support svg { width:16px; height:16px; filter:drop-shadow(0 0 6px rgba(92,255,120,.8)); }
+.top-support:hover, .top-support:active { color:#fff; background:rgba(76,201,94,.24); text-decoration:none; }
 @media (prefers-reduced-motion: reduce) {
-  .accent, .nav a.nav-accent, #support .btn--primary { animation:none; text-shadow:0 0 10px rgba(92,255,120,.8); }
+  .accent, .nav a.nav-accent, #support .btn--primary, .top-support { animation:none; text-shadow:0 0 10px rgba(92,255,120,.8); }
+  .top-support { box-shadow:0 0 0 1px rgba(134,232,148,.8), 0 0 14px rgba(76,201,94,.5); }
 }
 .badge--wait { background:rgba(224,184,76,.1); border-color:rgba(224,184,76,.5); color:var(--warning-500); }
 .badge--wait .pulse { background:var(--warning-500); animation:none; }
@@ -186,6 +194,8 @@ footer .links { margin-left:auto; display:flex; gap:18px; flex-wrap:wrap; }
 @media (max-width:640px) {
   .wrap { padding:0 16px; }
   .nav { display:none; }
+  .top-support { display:flex; }
+  [id] { scroll-margin-top:112px; }
   .top .wrap { gap:12px; }
   .lang { margin-left:auto; }
   .top .btn .tg-text { display:none; }
@@ -234,6 +244,7 @@ footer .links { margin-left:auto; display:flex; gap:18px; flex-wrap:wrap; }
     <div class="lang" role="group" aria-label="Language"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
     <a class="btn btn--tg btn--sm" data-link="telegram" href="#"><svg><use href="#i-tg"/></svg><span class="tg-text" data-i18n="tg">Телеграм</span></a>
   </div>
+  <a class="top-support" href="#support"><svg><use href="#i-heart"/></svg><span data-i18n="nav.supportBar">Поддержать проект</span></a>
 </header>
 
 <!-- ===== Hero ===== -->
@@ -386,7 +397,7 @@ const SITE = {
 const EN = {
   "title": "Placeholder — open beta",
   "description": "Placeholder is a 5v5 tactical shooter for phones and PC. Open beta: download for Windows or Android.",
-  "nav.download": "Download", "nav.install": "Install", "nav.support": "Support", "nav.faq": "FAQ",
+  "nav.download": "Download", "nav.install": "Install", "nav.support": "Support", "nav.supportBar": "Support the project", "nav.faq": "FAQ",
   "tg": "Telegram",
   "badge": "Open beta",
   "lead": "A 5v5 tactical shooter for phones and PC. Bomb plants, round economy, grenades — and all of it free.",
