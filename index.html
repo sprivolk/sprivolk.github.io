@@ -87,9 +87,23 @@ img { display:block; max-width:100%; }
 .hero h1 { margin:18px 0 6px; font:700 clamp(48px,9vw,104px)/0.95 var(--font-display); letter-spacing:3px; text-transform:uppercase; }
 .hero h1 span { color:var(--accent-text); text-shadow:0 0 30px rgba(76,201,94,.35); }
 .hero .lead { max-width:520px; font-size:19px; color:var(--text-200); margin:14px 0 30px; }
-.cta { display:flex; flex-wrap:wrap; gap:12px; }
+.cta { display:flex; flex-wrap:wrap; gap:12px; position:relative; }
+/* «Which Windows?» — a small pop-up under the Windows button (64-bit first, 32-bit for old PCs). */
+.pick { position:fixed; z-index:30; top:0; left:0; width:340px; max-width:calc(100vw - 32px); padding:14px;
+  background:var(--panel); border:1px solid var(--panel-edge); border-top-color:var(--panel-top); border-radius:var(--radius);
+  box-shadow:0 14px 40px rgba(0,0,0,.6); display:none; }
+.pick.is-open { display:block; animation:pickIn .14s ease-out; }
+@keyframes pickIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+@media (prefers-reduced-motion:reduce) { .pick.is-open { animation:none; } }
+.pick__title { font:800 12px var(--font-text); letter-spacing:1.1px; text-transform:uppercase; color:var(--text-300); margin:0 0 10px; }
+.pick .btn { width:100%; justify-content:flex-start; height:58px; margin-bottom:8px; }
+.pick .btn .sub { display:block; font:500 11px var(--font-mono); letter-spacing:.3px; text-transform:none; opacity:.85; margin-top:1px; }
+.pick .btn .lbl { display:flex; flex-direction:column; align-items:flex-start; line-height:1.2; }
+.pick__hint { margin:4px 0 0; font-size:12px; line-height:1.45; color:var(--text-300); }
 .ver { margin-top:18px; font:500 13px var(--font-mono); color:var(--text-300); display:flex; flex-wrap:wrap; gap:6px 18px; }
 .ver b { color:var(--text-200); font-weight:500; }
+.alt-dl { margin-top:12px; font-size:13px; color:var(--text-300); }
+.alt-dl[hidden] { display:none; }
 .ios-note { display:none; margin-top:14px; font-size:14px; color:var(--warning-500); }
 
 /* ---------- Sections ---------- */
@@ -263,7 +277,20 @@ footer .links { margin-left:auto; display:flex; gap:18px; flex-wrap:wrap; }
         <svg><use href="#i-android"/></svg>
         <span class="lbl"><span data-i18n="dl.android">Скачать для Android</span><span class="sub" data-size="android">APK · — МБ</span></span>
       </a>
+      <div class="pick" id="winpick" role="dialog" aria-labelledby="winpick-title">
+        <p class="pick__title" id="winpick-title" data-i18n="pick.title">Какая у вас Windows?</p>
+        <a class="btn btn--primary" data-link="windows" href="#">
+          <svg><use href="#i-win"/></svg>
+          <span class="lbl"><span data-i18n="pick.x64">64-бит</span><span class="sub"><span data-i18n="pick.x64sub">Почти все ПК</span> · <span data-size="windows">ZIP · — МБ</span></span></span>
+        </a>
+        <a class="btn" data-link="windows32" href="#">
+          <svg><use href="#i-win"/></svg>
+          <span class="lbl"><span data-i18n="pick.x86">32-бит</span><span class="sub"><span data-i18n="pick.x86sub">Старые ПК</span> · <span data-size="windows32">ZIP · — МБ</span></span></span>
+        </a>
+        <p class="pick__hint" data-i18n="pick.hint">Не знаете — берите 64-бит. Проверить: Параметры → Система → О системе → «Тип системы».</p>
+      </div>
     </div>
+    <div class="alt-dl" id="altdl" hidden><span data-i18n="alt.title">Без лаунчера (Windows 7, 32-бит):</span> <a data-link="windows" href="#">ZIP 64-<span data-i18n="alt.bit">бит</span></a> · <a data-link="windows32" href="#">ZIP 32-<span data-i18n="alt.bit">бит</span></a></div>
     <div class="ios-note" data-i18n="ios">На iPhone игры пока нет — следи за новостями в Телеграме.</div>
     <div class="ver"><span><span data-i18n="ver">Версия</span> <b data-field="version">—</b></span><span><span data-i18n="updated">Обновлено</span> <b data-date>—</b></span><a href="#install" data-i18n="howto">Как установить →</a></div>
   </div>
@@ -297,7 +324,7 @@ footer .links { margin-left:auto; display:flex; gap:18px; flex-wrap:wrap; }
 
     <div class="pane" data-pane="windows">
       <ol class="steps">
-        <li class="panel" data-i18n="step1">Скачай архив <b>Placeholder-Windows.zip</b> кнопкой вверху страницы.</li>
+        <li class="panel" data-i18n="step1">Скачай архив кнопкой «Скачать для Windows» вверху страницы (64-бит — для почти всех ПК).</li>
         <li class="panel" data-i18n="step2">Нажми на архив правой кнопкой → <b>«Извлечь всё»</b>. Не запускай игру прямо из архива.</li>
         <li class="panel" data-i18n="step3">Открой папку и запусти <span class="k">PlaceholderShooter.exe</span>.</li>
         <li class="panel" data-i18n="step4">Если появилось синее окно <b>«Windows защитил ваш компьютер»</b> — нажми <span class="k">Подробнее</span>, затем <span class="k">Выполнить в любом случае</span>.</li>
@@ -332,6 +359,7 @@ footer .links { margin-left:auto; display:flex; gap:18px; flex-wrap:wrap; }
       <span class="badge"><span class="pulse"></span><span data-i18n="support.badge">Через Telegram</span></span>
       <p data-i18n="support.text"><span class="accent">Поддержать</span> игру и купить кредиты можно в нашем Telegram-боте — оплата звёздами Telegram, кредиты сразу приходят в игру.</p>
       <a class="btn btn--primary" data-link="bot" href="#"><svg><use href="#i-tg"/></svg><span data-i18n="support.bot">Открыть бота</span></a>
+      <a class="btn btn--ghost" data-link="card" href="#" hidden style="display:none"><span data-i18n="support.card">Картой или СБП</span></a>
     </div>
   </div>
 </section>
@@ -378,18 +406,27 @@ footer .links { margin-left:auto; display:flex; gap:18px; flex-wrap:wrap; }
    (the files carry the version in their names, Placeholder-<v>.apk / Placeholder-Windows-<v>.zip, so a second download
    never turns into "Placeholder (1).apk"). */
 const SITE = {
-  version: "0.0.3 beta",
-  date: { ru: "21 ноября 2026", en: "November 21, 2026" },
+  version: "0.0.4 beta",
+  date: { ru: "22 ноября 2026", en: "November 22, 2026" },
   links: {
-    // "" = the button says «Скоро» / "Soon" and is not clickable (no file in the release yet)
-    windows:  "https://github.com/sprivolk/placeholder-shooter/releases/download/v0.0.3/Placeholder-Windows-0.0.3.zip",
-    android:  "https://github.com/sprivolk/placeholder-shooter/releases/download/v0.0.3/Placeholder-0.0.3.apk",
-    telegram: "https://t.me/placeholder_shooter",
-    bot:      "https://t.me/placeholder_donate_bot",
-    privacy:  "privacy.html",
-    terms:    "terms.html"
+    // "" = the button says «Скоро» / "Soon" and is not clickable (no file in the release yet);
+    // windows32 "" = no «Which Windows?» pop-up, the Windows button downloads the 64-bit file at once
+    windows:   "https://github.com/sprivolk/placeholder-shooter/releases/download/v0.0.4/Placeholder-Windows-0.0.4.zip",
+    windows32: "https://github.com/sprivolk/placeholder-shooter/releases/download/v0.0.4/Placeholder-Windows-x86-0.0.4.zip",
+    // The PC launcher's Setup (Launcher/, PlaceholderSetup.exe in every release): "" = the Windows button gives the zip.
+    launcher:  "https://github.com/sprivolk/placeholder-shooter/releases/latest/download/PlaceholderSetup.exe",
+    android:   "https://github.com/sprivolk/placeholder-shooter/releases/download/v0.0.4/Placeholder-0.0.4.apk",
+    telegram:  "https://t.me/placeholder_shooter",
+    bot:       "https://t.me/placeholder_donate_bot",
+    // The master's LavaTop pay page (cards of Russian banks, SBP, foreign cards, PayPal); the button shows only with
+    // SITE.cardOpen (below) or ?card=1 in the address (the author's test). "" = never.
+    card:      "https://57-129-190-160.sslip.io",
+    privacy:   "privacy.html",
+    terms:     "terms.html"
   },
-  sizes: { windows: ["ZIP", 230], android: ["APK", 228] }   // [type, MB]
+  // «Картой или СБП» in «Поддержать»: false = hidden (2026-11-22, the author: waiting for LavaTop's support), true = shown.
+  cardOpen: false,
+  sizes: { windows: ["ZIP", 230], windows32: ["ZIP", 214], android: ["APK", 262], launcher: ["EXE", 13] }   // [type, MB]
 };
 
 /* English texts. The Russian ones are the page itself (read from it at load): a Russian edit is made in the HTML,
@@ -402,12 +439,20 @@ const EN = {
   "badge": "Open beta",
   "lead": "A 5v5 tactical shooter for phones and PC. Bomb plants, round economy, grenades — and all of it free.",
   "dl.win": "Download for Windows", "dl.android": "Download for Android",
+  "alt.title": "Without the launcher (Windows 7, 32-bit):", "alt.bit": "bit",
+  "stepL1": "Download the installer with the «Download for Windows» button at the top — it is about 13 MB.",
+  "stepL2": "Run <span class=\"k\">PlaceholderSetup.exe</span>. If a blue <b>«Windows protected your PC»</b> window shows up, press <span class=\"k\">More info</span>, then <span class=\"k\">Run anyway</span>.",
+  "stepL3": "Say whether the game is already on the PC and press <b>«Install»</b> — the launcher downloads the game and then installs updates by itself (only the changes are downloaded).",
+  "stepL4": "Press <b>«Play»</b>. Already unpacked the archive before? Pick «Yes, I have it» and its folder — only the changes get downloaded.",
+  "pick.title": "Which Windows do you have?", "pick.x64": "64-bit", "pick.x64sub": "Almost every PC",
+  "pick.x86": "32-bit", "pick.x86sub": "Old PCs",
+  "pick.hint": "Not sure — take 64-bit. To check: Settings → System → About → «System type».",
   "soon": "Soon", "mb": "MB",
   "ios": "No iPhone version yet — follow the news in our Telegram.",
   "ver": "Version", "updated": "Updated", "howto": "How to install →",
   "h.shots": "Screenshots", "h.install": "How to install", "h.support": "<span class=\"accent\">Support</span> the developers", "h.faq": "FAQ",
   "install.lead": "The game isn't in the stores yet, so your system will warn you about an “unknown app”. That's normal — here's what to tap, step by step.",
-  "step1": "Download <b>Placeholder-Windows.zip</b> with the button at the top of the page.",
+  "step1": "Download the archive with the «Download for Windows» button at the top of the page (64-bit is for almost every PC).",
   "step2": "Right-click the archive → <b>“Extract All”</b>. Don't run the game from inside the archive.",
   "step3": "Open the folder and run <span class=\"k\">PlaceholderShooter.exe</span>.",
   "step4": "If a blue <b>“Windows protected your PC”</b> window appears, click <span class=\"k\">More info</span>, then <span class=\"k\">Run anyway</span>.",
@@ -423,6 +468,7 @@ const EN = {
   "support.badge": "Via Telegram",
   "support.text": "<span class=\"accent\">Support</span> the game and buy credits in our Telegram bot — you pay with Telegram Stars, the credits come to the game at once.",
   "support.bot": "Open the bot",
+  "support.card": "Pay by card",
   "q1": "Is the game free?", "a1": "Yes. Downloading and playing is free.",
   "q2": "Will my progress carry over after the beta?",
   "a2": "Items with the yellow beta stamp stay with you forever. Everything else given out for the test may be reset before release.",
@@ -438,7 +484,11 @@ const EN = {
   "privacy": "Privacy", "terms": "Terms",
   "alt1": "Shooting on the training map", "alt2": "Smoke grenade", "alt3": "Training arena from above", "alt4": "Cover", "alt5": "Knife in a corridor"
 };
-const RU_EXTRA = { "soon": "Скоро", "mb": "МБ" };
+const RU_EXTRA = { "soon": "Скоро", "mb": "МБ",
+  "stepL1": "Скачай установщик кнопкой «Скачать для Windows» вверху страницы — он весит около 13 МБ.",
+  "stepL2": "Запусти <span class=\"k\">PlaceholderSetup.exe</span>. Если появилось синее окно <b>«Windows защитил ваш компьютер»</b> — нажми <span class=\"k\">Подробнее</span>, затем <span class=\"k\">Выполнить в любом случае</span>.",
+  "stepL3": "Ответь, есть ли уже игра на компьютере, и нажми <b>«Установить»</b> — лаунчер скачает игру, а потом сам будет ставить обновления (качаются только изменения).",
+  "stepL4": "Нажми <b>«Играть»</b>. Уже распаковал архив раньше? Выбери «Да, уже есть» и укажи его папку — скачаются только изменения." };
 /* ==================================================== */
 
 // Russian texts = what the page has now.
@@ -446,10 +496,29 @@ const RU = Object.assign({ title: document.title, description: document.querySel
 document.querySelectorAll("[data-i18n]").forEach(e => { if (!(e.dataset.i18n in RU)) RU[e.dataset.i18n] = e.innerHTML; });
 document.querySelectorAll("[data-i18n-alt]").forEach(e => { if (!(e.dataset.i18nAlt in RU)) RU[e.dataset.i18nAlt] = e.alt; });
 
+// The PC launcher: the Windows button downloads the Setup, the zips go to the small line, the steps tell about it.
+const useLauncher = !!SITE.links.launcher;
+if (useLauncher) {
+  const w = document.querySelector('#cta [data-platform="windows"]');
+  w.dataset.link = "launcher";
+  w.querySelector("[data-size]").dataset.size = "launcher";
+  document.getElementById("altdl").hidden = false;
+  ["step1", "step2", "step3", "step4"].forEach((k, i) => {
+    const li = document.querySelector('[data-pane="windows"] [data-i18n="' + k + '"]');
+    if (li) li.dataset.i18n = "stepL" + (i + 1);
+  });
+}
 document.querySelectorAll("[data-field]").forEach(e => { if (typeof SITE[e.dataset.field] === "string") e.textContent = SITE[e.dataset.field]; });
 document.querySelectorAll("[data-link]").forEach(a => {
   const url = SITE.links[a.dataset.link];
   if (url) { a.href = url; if (/^https?:/.test(url) && !/github\.com/.test(url)) { a.target = "_blank"; a.rel = "noopener"; } }
+  // The card pay page: hidden until SITE.cardOpen, or opened by hand with ?card=1.
+  // (.btn sets its own display, so the hidden attribute alone would not hide it.)
+  if (a.dataset.link === "card") {
+    const shown = !!url && (SITE.cardOpen || new URLSearchParams(location.search).get("card") === "1");
+    a.hidden = !shown;
+    a.style.display = shown ? "" : "none";
+  }
 });
 
 // A platform whose file is not out yet: «Скоро» / "Soon", not clickable.
@@ -485,6 +554,25 @@ function setLang(lang, remember) {
 }
 document.querySelectorAll("[data-lang]").forEach(b => b.onclick = () => setLang(b.dataset.lang, true));
 setLang(pickLang(), false);
+
+// «Which Windows?»: with a 32-bit file in the release the Windows button opens the pop-up, else it downloads at once.
+const winBtn = cta.querySelector('[data-platform="windows"]'), winPick = document.getElementById("winpick");
+if (SITE.links.windows && SITE.links.windows32 && !useLauncher) {
+  // Under the button when it fits, else above it; kept on the screen's width.
+  const placePick = () => {
+    if (!winPick.classList.contains("is-open")) return;
+    const r = winBtn.getBoundingClientRect(), h = winPick.offsetHeight, w = winPick.offsetWidth;
+    const below = r.bottom + 10 + h <= window.innerHeight || r.top - 10 - h < 0;
+    winPick.style.top = (below ? r.bottom + 10 : r.top - 10 - h) + "px";
+    winPick.style.left = Math.max(16, Math.min(r.left, window.innerWidth - w - 16)) + "px";
+  };
+  winBtn.addEventListener("click", e => { e.preventDefault(); winPick.classList.toggle("is-open"); placePick(); });
+  document.addEventListener("scroll", () => winPick.classList.remove("is-open"), { capture: true, passive: true });
+  window.addEventListener("resize", placePick);
+  document.addEventListener("click", e => { if (!winPick.contains(e.target) && !winBtn.contains(e.target)) winPick.classList.remove("is-open"); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") winPick.classList.remove("is-open"); });
+  winPick.querySelectorAll("a").forEach(a => a.addEventListener("click", () => winPick.classList.remove("is-open")));
+}
 
 // Platform: phone users get the APK button first; iPhone users get a note.
 const ua = navigator.userAgent;
