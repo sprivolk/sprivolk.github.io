@@ -406,16 +406,16 @@ footer .links { margin-left:auto; display:flex; gap:18px; flex-wrap:wrap; }
    (the files carry the version in their names, Placeholder-<v>.apk / Placeholder-Windows-<v>.zip, so a second download
    never turns into "Placeholder (1).apk"). */
 const SITE = {
-  version: "0.0.5 beta",
-  date: { ru: "23 ноября 2026", en: "November 23, 2026" },
+  version: "0.0.6 beta",
+  date: { ru: "24 ноября 2026", en: "November 24, 2026" },
   links: {
     // "" = the button says «Скоро» / "Soon" and is not clickable (no file in the release yet);
     // windows32 "" = no «Which Windows?» pop-up, the Windows button downloads the 64-bit file at once
-    windows:   "https://github.com/sprivolk/placeholder-shooter/releases/download/v0.0.5/Placeholder-Windows-0.0.5.zip",
-    windows32: "https://github.com/sprivolk/placeholder-shooter/releases/download/v0.0.5/Placeholder-Windows-x86-0.0.5.zip",
+    windows:   "https://github.com/sprivolk/placeholder-shooter/releases/download/v0.0.6/Placeholder-Windows-0.0.6.zip",
+    windows32: "https://github.com/sprivolk/placeholder-shooter/releases/download/v0.0.6/Placeholder-Windows-x86-0.0.6.zip",
     // The PC launcher's Setup (Launcher/, PlaceholderSetup.exe in every release): "" = the Windows button gives the zip.
     launcher:  "https://github.com/sprivolk/placeholder-shooter/releases/latest/download/PlaceholderSetup.exe",
-    android:   "https://github.com/sprivolk/placeholder-shooter/releases/download/v0.0.5/Placeholder-0.0.5.apk",
+    android:   "https://github.com/sprivolk/placeholder-shooter/releases/download/v0.0.6/Placeholder-0.0.6.apk",
     telegram:  "https://t.me/placeholder_shooter",
     bot:       "https://t.me/placeholder_donate_bot",
     // The master's LavaTop pay page (cards of Russian banks, SBP, foreign cards, PayPal); the button shows only with
@@ -426,7 +426,7 @@ const SITE = {
   },
   // «Картой или СБП» in «Поддержать»: false = hidden (2026-11-22, the author: waiting for LavaTop's support), true = shown.
   cardOpen: false,
-  sizes: { windows: ["ZIP", 234], windows32: ["ZIP", 219], android: ["APK", 267], launcher: ["EXE", 13] }   // [type, MB]
+  sizes: { windows: ["ZIP", 247], windows32: ["ZIP", 231], android: ["APK", 268], launcher: ["EXE", 13] }   // [type, MB]
 };
 
 /* English texts. The Russian ones are the page itself (read from it at load): a Russian edit is made in the HTML,
