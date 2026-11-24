@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="robots" content="noindex">
+<title>Placeholder Shooter — оплата криптой</title>
+<!-- The crypto pay page (2026-11-24): a Telegram mini app the shop bot opens (also works in a browser).
+     The bot puts the account and the pack in the address; TON Connect fills the player's wallet transfer to the owner's
+     address with the player's code in the comment. The page credits nothing: the master reads the chain itself
+     (Server/InventoryServer/CryptoWatcher.cs). The address and the USDT master are written here, not taken from the link. -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://unpkg.com/@tonconnect/ui@2.0.9/dist/tonconnect-ui.min.js"></script>
+<script src="https://unpkg.com/qrcode-generator@1.4.4/qrcode.js"></script>
+<style>
+  @font-face { font-family: Play; src: url(Play-Bold.ttf); }
+  :root {
+    --bg-100: #0c0f12; --bg-200: #12161a; --bg-300: #191e23; --bg-400: #222930;
+    --line-100: #1f252b; --line-200: #343d46; --text-100: #eef2f4; --text-200: #aab4bb; --text-300: #808b94;
+    --accent-500: #3aa34a; --accent-text: #4cc95e; --gold: #e0b23a; --gold-hi: #ffd56a; --credits: #5ea8ef;
+    --usdt: #26a17b; --ton: #0098ea; --warn: #ffb547; --bad: #ff6b6b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body { background: linear-gradient(170deg, #161d24, #090c0f 70%) fixed; color: var(--text-100);
+         font: 14px/1.42 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 460px; margin: 0 auto; padding: 14px 16px 28px; display: flex; flex-direction: column; gap: 12px; }
+  .ttl { font: 18px Play, sans-serif; letter-spacing: 1.4px; text-transform: uppercase; text-align: center; margin: 2px 0 2px; }
+  .card { background: rgba(18,22,26,.92); border: 1px solid var(--line-100); border-radius: 6px; padding: 12px; }
+  .pack { display: flex; gap: 12px; align-items: center; }
+  .pack img { width: 120px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid var(--line-200); flex: none; }
+  .pack .n { font: 17px Play, sans-serif; letter-spacing: .5px; }
+  .pack .cr { font-weight: 600; font-size: 15px; color: var(--credits); margin-top: 3px; }
+  .bonus { display: inline-block; font-size: 11px; font-weight: 700; color: #0b1a10; background: var(--accent-text); border-radius: 3px; padding: 1px 5px; margin-left: 5px; vertical-align: 1px; }
+  .pack .cs { font-size: 13px; color: var(--gold-hi); margin-top: 2px; }
+  .acct { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--text-200); flex-wrap: wrap; }
+  .acct b { color: var(--text-100); font-weight: 600; }
+  .lbl { font-size: 11.5px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-300); margin-bottom: 6px; }
+  .coins { display: flex; gap: 8px; }
+  .coin { flex: 1; background: var(--bg-200); border: 1px solid var(--line-200); border-radius: 6px; padding: 10px; cursor: pointer; text-align: left; color: var(--text-100); font: inherit; }
+  .coin.on { border-color: var(--gold); background: var(--bg-300); }
+  .coin .ic { display: inline-flex; width: 22px; height: 22px; border-radius: 50%; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; vertical-align: -5px; margin-right: 6px; color: #fff; }
+  .coin .am { font-size: 19px; font-weight: 700; display: block; margin-top: 6px; }
+  .coin .hint { font-size: 11.5px; color: var(--text-300); }
+  .net { font-size: 12.5px; color: var(--text-200); display: flex; gap: 6px; align-items: center; }
+  .net .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ton); flex: none; }
+  .amount { display: flex; align-items: center; gap: 8px; }
+  .amount input { flex: 1; min-width: 0; background: var(--bg-100); border: 1px solid var(--line-200); color: var(--text-100); border-radius: 6px; padding: 10px; font: 600 20px system-ui, sans-serif; }
+  .amount span { font-weight: 700; color: var(--text-200); }
+  .est { font-size: 13px; color: var(--text-200); margin-top: 6px; }
+  .est b { color: var(--credits); }
+  button.big { width: 100%; border: 0; border-radius: 6px; padding: 14px; font-size: 15px; font-weight: 700; letter-spacing: .4px; cursor: pointer; color: #fff;
+               background: linear-gradient(180deg, #1aa4f0, #0a7bc0); box-shadow: 0 0 0 1px #4cc0ff inset; }
+  button.big.green { background: linear-gradient(180deg, #45b957, #2f8a3c); box-shadow: 0 0 0 1px #57d06a inset; }
+  button.big:disabled { opacity: .5; cursor: default; }
+  button.ghost { width: 100%; background: none; border: 1px solid var(--line-200); color: var(--text-200); border-radius: 6px; padding: 11px; font: inherit; cursor: pointer; }
+  .links { display: flex; flex-direction: column; gap: 8px; }
+  .small { font-size: 12px; color: var(--text-300); }
+  .center { text-align: center; }
+  .warn { border: 1px solid rgba(255,181,71,.55); background: rgba(255,181,71,.08); color: #ffd9a0; border-radius: 6px; padding: 10px 12px; font-size: 13px; }
+  .warn b { color: var(--warn); }
+  .err { border: 1px solid rgba(255,107,107,.5); background: rgba(255,107,107,.08); color: #ffc4c4; border-radius: 6px; padding: 10px 12px; font-size: 13px; }
+  .field { background: var(--bg-100); border: 1px solid var(--line-200); border-radius: 6px; padding: 9px 10px; display: flex; align-items: center; gap: 8px; }
+  .field .v { flex: 1; font-weight: 600; font-size: 13.5px; word-break: break-all; }
+  .field .v.code { font: 20px Play, sans-serif; letter-spacing: 2px; color: var(--gold-hi); }
+  .field button { background: var(--bg-400); color: var(--text-100); border: 0; border-radius: 4px; padding: 7px 10px; font: 600 12px system-ui, sans-serif; cursor: pointer; white-space: nowrap; }
+  .field button.done { background: var(--accent-500); }
+  .qr { width: 184px; height: 184px; margin: 0 auto; background: #fff; border-radius: 6px; padding: 8px; }
+  .qr img, .qr svg { width: 100%; height: 100%; display: block; }
+  .wallet { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--text-200); }
+  .wallet a { color: #6ab3f3; cursor: pointer; }
+  .spin { width: 60px; height: 60px; border-radius: 50%; border: 5px solid var(--bg-400); border-top-color: var(--ton); margin: 26px auto 12px; animation: r 1s linear infinite; }
+  @keyframes r { to { transform: rotate(360deg); } }
+  .okc { width: 70px; height: 70px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #6ee07f, #2f8a3c); margin: 22px auto 10px; display: flex; align-items: center; justify-content: center; font-size: 36px; box-shadow: 0 0 30px rgba(76,201,94,.5); }
+  .h2 { font: 20px Play, sans-serif; letter-spacing: .5px; text-align: center; }
+  ol.how { margin: 0; padding-left: 20px; font-size: 14px; color: var(--text-200); }
+  ol.how li { margin-bottom: 8px; } ol.how b { color: var(--text-100); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+// ---------- Fixed here (never from the link) ----------
+const OWNER = "UQASDliCKNMSzK5FeoF3kFmhd0FddoRm1mOvWbiGnXEI0LOq";
+const USDT_MASTER = "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs";
+const TONCENTER = "https://toncenter.com/api/v3";
+const BOT = "https://t.me/placeholder_donate_bot";
+const GAS_TON = 0.05;          // what a USDT transfer takes along for the network (the rest comes back)
+const PACK_ART = { mini: "pack1.jpg", small: "pack2.jpg", big: "pack3.jpg", chest: "pack4.jpg" };
+
+// ---------- From the bot's link ----------
+const P = new URLSearchParams(location.search);
+const RU = P.get("lang") ? P.get("lang") === "ru" : /^(ru|uk|be|kk)/i.test(navigator.language || "ru");
+const CODE = (P.get("code") || "").slice(0, 24);
+const NICK = (P.get("nick") || "").slice(0, 40);
+const ID = (P.get("id") || "").replace(/\D/g, "").slice(0, 12);
+const PACK = P.get("pack") || "";
+const PACK_NAME = (P.get("name") || "").slice(0, 40);
+const PACK_USD = parseFloat(P.get("usd") || "0") || 0;
+const CREDITS = parseInt(P.get("credits") || "0", 10) || 0;
+const CASES = parseInt(P.get("cases") || "0", 10) || 0;
+const BONUS = parseInt(P.get("bonus") || "20", 10) || 0;
+const PER_USD = parseInt(P.get("per") || "100", 10) || 100;
+const MIN_USD = parseFloat(P.get("min") || "1") || 1;
+let rate = parseFloat(P.get("rate") || "0") || 0;   // $ per Gram
+
+const T = RU ? {
+  title: "Оплата криптой", account: "Аккаунт", code: "Ваш код", pay: "Чем платите", exact: "ровно $", byRate: "по курсу сейчас",
+  net: "Сеть TON — выбирать ничего не нужно", amount: "Сколько отправить", estimate: n => `≈ <b>${n}</b> кредитов (+${BONUS}% за крипту) — точно посчитает мастер, когда перевод придёт`,
+  connectPay: "Подключить кошелёк и оплатить", payFrom: w => `Оплатить из ${w}`, wallet: w => `Кошелёк: ${w}`, change: "сменить",
+  manual: "Перевести вручную (биржа, другой кошелёк)", howBuy: "Нет крипты? Как купить USDT",
+  foot: acc => `Кредиты придут на аккаунт ${acc} примерно через минуту после перевода. Возврата в крипте нет — проверьте аккаунт выше.`,
+  credits: "кредитов", cases: n => `+ ${n} Sponsor Case`, noAccount: "Откройте эту страницу из бота @placeholder_donate_bot — в ссылке нет вашего аккаунта.",
+  minAmount: m => `Минимум $${m}.`,
+  noUsdt: "На подключённом кошельке нет USDT в сети TON. Купите USDT или выберите Gram.",
+  fewUsdt: (h, n) => `На кошельке ${h} USDT, а нужно ${n}.`,
+  noGas: g => `Для перевода USDT сеть TON берёт немного Gram (≈${GAS_TON}, остаток вернётся). На кошельке ${g} Gram — пополните Gram на ≈$0.30.`,
+  fewTon: (h, n) => `На кошельке ${h} Gram, а нужно ${n} + немного на комиссию.`,
+  checkFailed: "Не удалось проверить баланс кошелька — пробуем отправить так.",
+  sent: "Перевод отправлен", sentText: "Обычно он доходит за 10–60 секунд. Можно закрыть окно — бот напишет, когда кредиты придут.",
+  back: "Вернуться в бот", cancelled: "Перевод отменён в кошельке.", failed: e => `Кошелёк не отправил перевод: ${e}`,
+  warnNet: "<b>Только Gram (TON) или USDT в сети TON.</b> USDT из TRON (TRC-20), Ethereum, BSC сюда не дойдёт и пропадёт.",
+  m1: "1. Сумма", m2: "2. Адрес", m3: "3. Комментарий (memo) — обязательно", m3note: "Это ваш постоянный код. Без него мы не узнаем, чей перевод.",
+  copy: "Копировать", copied: "Скопировано", qr: "QR уже содержит адрес, сумму и комментарий", openTk: "Открыть в Tonkeeper",
+  backPay: "← Назад к оплате", rateLoading: "курс загружается…",
+  howTitle: "Как купить USDT",
+  how: ["Откройте <b>Wallet</b> в Telegram (@wallet) → <b>Пополнить</b> → <b>P2P Маркет</b>.",
+        "Выберите <b>USDT</b>, сумму и продавца со способом <b>СБП</b> или вашим банком.",
+        "Переведите продавцу рубли и нажмите «Я оплатил» — USDT придут в Wallet через несколько минут.",
+        "Переведите USDT в <b>DeFi Счёт</b> («перевод из Wallet») и докупите там чуть-чуть <b>Gram</b> (≈$0.30) на комиссию сети.",
+        "Вернитесь сюда и нажмите <b>«Подключить кошелёк и оплатить»</b>."],
+  howNote: "Выбирайте продавцов с высоким рейтингом. Мы не связаны с P2P-маркетом и не видим ваших платежей там.",
+  support: "Поддержка проекта",
+} : {
+  title: "Pay with crypto", account: "Account", code: "Your code", pay: "Pay with", exact: "exactly $", byRate: "at the rate now",
+  net: "TON network — nothing to choose", amount: "How much to send", estimate: n => `≈ <b>${n}</b> credits (+${BONUS}% for crypto) — the master counts it exactly when the transfer arrives`,
+  connectPay: "Connect a wallet and pay", payFrom: w => `Pay from ${w}`, wallet: w => `Wallet: ${w}`, change: "change",
+  manual: "Send by hand (exchange, another wallet)", howBuy: "No crypto? How to buy USDT",
+  foot: acc => `Credits come to ${acc} about a minute after the transfer. Crypto can't be refunded — check the account above.`,
+  credits: "credits", cases: n => `+ ${n} Sponsor Case${n === 1 ? "" : "s"}`, noAccount: "Open this page from the bot @placeholder_donate_bot — the link has no account.",
+  minAmount: m => `At least $${m}.`,
+  noUsdt: "The connected wallet has no USDT on TON. Buy USDT or pick Gram.",
+  fewUsdt: (h, n) => `The wallet has ${h} USDT, ${n} is needed.`,
+  noGas: g => `A USDT transfer takes a little Gram for the network (≈${GAS_TON}, the rest comes back). The wallet has ${g} Gram — add ≈$0.30 of Gram.`,
+  fewTon: (h, n) => `The wallet has ${h} Gram, ${n} + a little for the fee is needed.`,
+  checkFailed: "Could not check the wallet's balance — trying to send anyway.",
+  sent: "Transfer sent", sentText: "It usually arrives in 10–60 seconds. You can close this window — the bot will write when the credits come.",
+  back: "Back to the bot", cancelled: "The transfer was cancelled in the wallet.", failed: e => `The wallet did not send the transfer: ${e}`,
+  warnNet: "<b>Only Gram (TON) or USDT on the TON network.</b> USDT from TRON (TRC-20), Ethereum, BSC never arrives and is lost.",
+  m1: "1. Amount", m2: "2. Address", m3: "3. Comment (memo) — required", m3note: "This is your code for good. Without it we can't tell whose transfer it is.",
+  copy: "Copy", copied: "Copied", qr: "The QR holds the address, the amount and the comment", openTk: "Open in Tonkeeper",
+  backPay: "← Back to payment", rateLoading: "loading the rate…",
+  howTitle: "How to buy USDT",
+  how: ["Open <b>Wallet</b> in Telegram (@wallet) → <b>Deposit</b> → <b>P2P Market</b>.",
+        "Pick <b>USDT</b>, the amount and a seller with your bank or payment method.",
+        "Pay the seller and press «I've paid» — USDT arrives in Wallet in a few minutes.",
+        "Move USDT to your <b>DeFi account</b> and buy a little <b>Gram</b> (≈$0.30) there for the network fee.",
+        "Come back here and press <b>«Connect a wallet and pay»</b>."],
+  howNote: "Pick sellers with a high rating. We are not tied to the P2P market and don't see your payments there.",
+  support: "Support the project",
+};
+
+const tg = window.Telegram && Telegram.WebApp;
+if (tg) { try { tg.ready(); tg.expand(); tg.setHeaderColor && tg.setHeaderColor("#12161a"); tg.setBackgroundColor && tg.setBackgroundColor("#0c0f12"); } catch (e) {} }
+
+let coin = "usdt";
+let usd = PACK_USD || 5;
+let screen = "pay";
+let notice = "";        // a warning shown on the pay screen
+let ton = null;         // TonConnectUI
+
+const app = document.getElementById("app");
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const accountText = () => `${NICK || "?"} · #${ID.padStart(6, "0")}`;
+const fmt = n => Number(n).toLocaleString(RU ? "ru-RU" : "en-US");
+const gramFor = d => rate > 0 ? Math.ceil(d / rate * 100) / 100 : 0;
+// The packs as "$:credits" (the bot's link): the biggest one the dollars reach + the Dep rate for the rest, +bonus — the master's rule.
+const TIERS = (P.get("tiers") || "").split(",").map(t => t.split(":").map(Number)).filter(t => t.length === 2 && t[0] > 0 && t[1] > 0).sort((a, b) => a[0] - b[0]);
+const estimate = d => {
+  let base = Math.floor(d * PER_USD);
+  for (const [price, credits] of TIERS) if (d >= price) base = credits + Math.floor((d - price) * PER_USD);
+  return Math.floor(base * (100 + BONUS) / 100);
+};
+const amountText = () => coin === "usdt" ? `${usd.toFixed(2).replace(/\.00$/, "")} USDT` : `${gramFor(usd)} Gram`;
+
+function render() {
+  if (!CODE || !ID) { app.innerHTML = `<div class="ttl">${T.title}</div><div class="err">${T.noAccount}</div>`; return; }
+  app.innerHTML = { pay: payScreen, sent: sentScreen, manual: manualScreen, how: howScreen }[screen]();
+  if (screen === "manual") drawQr();
+}
+
+function payScreen() {
+  const head = PACK
+    ? `<div class="card pack"><img src="${PACK_ART[PACK] || "pack1.jpg"}" alt="">
+        <div><div class="n">${esc(PACK_NAME)}</div>
+        <div class="cr">${fmt(CREDITS)} ${T.credits}<span class="bonus">+${BONUS}%</span></div>
+        ${CASES > 0 ? `<div class="cs">${T.cases(CASES)}</div>` : ""}</div></div>`
+    : `<div class="card"><div class="lbl">${T.support} · ${T.amount}</div>
+        <div class="amount"><input id="usd" type="number" inputmode="decimal" min="${MIN_USD}" step="1" value="${usd}"><span>$</span></div>
+        <div class="est" id="est">${usd >= MIN_USD ? T.estimate(fmt(estimate(usd))) : T.minAmount(MIN_USD)}</div></div>`;
+  const w = ton && ton.wallet;
+  const wName = w ? (ton.walletInfo && ton.walletInfo.name) || "wallet" : "";
+  return `<div class="ttl">${T.title}</div>${head}
+    <div class="acct"><span>${T.account}: <b>${esc(accountText())}</b></span><span>${T.code}: <b>${esc(CODE)}</b></span></div>
+    <div><div class="lbl">${T.pay}</div><div class="coins">
+      <button class="coin ${coin === "usdt" ? "on" : ""}" data-coin="usdt"><span class="ic" style="background:var(--usdt)">₮</span>USDT<span class="am">${usd.toFixed(2)}</span><span class="hint">${T.exact}${usd.toFixed(2).replace(/\.00$/, "")}</span></button>
+      <button class="coin ${coin === "gram" ? "on" : ""}" data-coin="gram"><span class="ic" style="background:var(--ton)">◆</span>Gram (TON)<span class="am">${rate > 0 ? "≈ " + gramFor(usd) : "…"}</span><span class="hint">${rate > 0 ? T.byRate : T.rateLoading}</span></button>
+    </div></div>
+    <div class="net"><span class="dot"></span>${T.net}</div>
+    ${notice ? `<div class="warn">${notice}</div>` : ""}
+    ${w ? `<div class="wallet"><span>${T.wallet(esc(wName))}</span><a data-act="change">${T.change}</a></div>` : ""}
+    <button class="big" data-act="pay" ${usd < MIN_USD || (coin === "gram" && !rate) ? "disabled" : ""}>${w ? T.payFrom(esc(wName)) : T.connectPay}</button>
+    <div class="links"><button class="ghost" data-go="manual">${T.manual}</button><button class="ghost" data-go="how">${T.howBuy}</button></div>
+    <div class="small">${T.foot(esc(accountText()))}</div>`;
+}
+
+function sentScreen() {
+  return `<div class="okc">✓</div><div class="h2">${T.sent}</div>
+    <div class="small center">${T.sentText}</div>
+    <div class="card small">${esc(amountText())} → ${OWNER.slice(0, 6)}…${OWNER.slice(-5)}<br>${T.code}: ${esc(CODE)}</div>
+    <button class="big green" data-act="close">${T.back}</button>`;
+}
+
+function manualScreen() {
+  return `<div class="ttl">${T.title}</div><div class="warn">${T.warnNet}</div>
+    <div><div class="lbl">${T.m1}</div><div class="field"><span class="v">${esc(amountText())}</span><button data-copy="${coin === "usdt" ? usd : gramFor(usd)}">${T.copy}</button></div></div>
+    <div><div class="lbl">${T.m2}</div><div class="field"><span class="v">${OWNER}</span><button data-copy="${OWNER}">${T.copy}</button></div></div>
+    <div><div class="lbl">${T.m3}</div><div class="field"><span class="v code">${esc(CODE)}</span><button data-copy="${esc(CODE)}">${T.copy}</button></div>
+    <div class="small" style="margin-top:6px">${T.m3note}</div></div>
+    <div class="qr" id="qr"></div><div class="small center">${T.qr}</div>
+    <a href="${tonkeeperLink()}" target="_blank" rel="noopener"><button class="ghost">${T.openTk}</button></a>
+    <button class="ghost" data-go="pay">${T.backPay}</button>`;
+}
+
+function howScreen() {
+  return `<div class="h2" style="text-align:left">${T.howTitle}</div><ol class="how">${T.how.map(x => `<li>${x}</li>`).join("")}</ol>
+    <div class="small">${T.howNote}</div><button class="ghost" data-go="pay">${T.backPay}</button>`;
+}
+
+function transferLink(scheme) {
+  const text = encodeURIComponent(CODE);
+  return coin === "usdt"
+    ? `${scheme}${OWNER}?jetton=${USDT_MASTER}&amount=${Math.round(usd * 1e6)}&text=${text}`
+    : `${scheme}${OWNER}?amount=${Math.round(gramFor(usd) * 1e9)}&text=${text}`;
+}
+const tonkeeperLink = () => transferLink("https://app.tonkeeper.com/transfer/");
+
+function drawQr() {
+  const box = document.getElementById("qr");
+  if (!box || typeof qrcode !== "function") return;
+  const q = qrcode(0, "M");
+  q.addData(transferLink("ton://transfer/"));
+  q.make();
+  box.innerHTML = q.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+}
+
+// ---------- The wallet ----------
+
+let core = null;   // @ton/core, loaded when first needed
+async function tonCore() {
+  if (!core) core = await import("https://esm.sh/@ton/core@0.59.0");
+  return core;
+}
+
+function commentCell(c) {
+  return c.beginCell().storeUint(0, 32).storeStringTail(CODE).endCell();
+}
+
+async function getJson(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  return r.json();
+}
+
+async function tonBalance(raw) {
+  const j = await getJson(`${TONCENTER}/account?address=${encodeURIComponent(raw)}`);
+  return Number(j.balance || 0) / 1e9;
+}
+
+async function usdtWallet(raw) {
+  const j = await getJson(`${TONCENTER}/jetton/wallets?owner_address=${encodeURIComponent(raw)}&jetton_address=${USDT_MASTER}&limit=1`);
+  const w = (j.jetton_wallets || [])[0];
+  return w ? { address: w.address, balance: Number(w.balance || 0) / 1e6 } : null;
+}
+
+async function pay() {
+  notice = "";
+  if (!ton.wallet) { await ton.openModal(); return; }   // after connecting, onStatusChange calls pay() again
+  const c = await tonCore();
+  const me = ton.wallet.account.address;                // raw 0:…
+  const messages = [];
+  let checked = true;
+  if (coin === "usdt") {
+    let jw = null, gas = 0;
+    try { jw = await usdtWallet(me); await new Promise(r => setTimeout(r, 1100)); gas = await tonBalance(me); }
+    catch (e) { checked = false; }
+    if (checked) {
+      if (!jw || jw.balance <= 0) { notice = T.noUsdt; render(); return; }
+      if (jw.balance + 1e-9 < usd) { notice = T.fewUsdt(jw.balance.toFixed(2), usd.toFixed(2)); render(); return; }
+      if (gas < GAS_TON + 0.005) { notice = T.noGas(gas.toFixed(3)); render(); return; }
+    }
+    if (!jw) { notice = T.checkFailed; render(); return; }
+    const body = c.beginCell()
+      .storeUint(0x0f8a7ea5, 32).storeUint(BigInt(Date.now()), 64)
+      .storeCoins(BigInt(Math.round(usd * 1e6)))
+      .storeAddress(c.Address.parse(OWNER))
+      .storeAddress(c.Address.parse(me))
+      .storeBit(0)
+      .storeCoins(1n)
+      .storeBit(1).storeRef(commentCell(c))
+      .endCell();
+    messages.push({ address: c.Address.parse(jw.address).toString({ bounceable: true }), amount: String(Math.round(GAS_TON * 1e9)), payload: body.toBoc().toString("base64") });
+  } else {
+    const gram = gramFor(usd);
+    try {
+      const have = await tonBalance(me);
+      if (have < gram + 0.01) { notice = T.fewTon(have.toFixed(2), gram); render(); return; }
+    } catch (e) { /* not checked: let the wallet say */ }
+    messages.push({ address: OWNER, amount: String(Math.round(gram * 1e9)), payload: commentCell(c).toBoc().toString("base64") });
+  }
+  try {
+    await ton.sendTransaction({ validUntil: Math.floor(Date.now() / 1000) + 600, messages });
+    screen = "sent";
+  } catch (e) {
+    const msg = (e && (e.message || e.toString())) || "";
+    notice = /reject|cancel|declin/i.test(msg) ? T.cancelled : T.failed(esc(msg.slice(0, 120)));
+  }
+  render();
+}
+
+function initTon() {
+  if (!window.TON_CONNECT_UI) return;
+  ton = new TON_CONNECT_UI.TonConnectUI({ manifestUrl: new URL("tonconnect-manifest.json", location.href).href });
+  ton.uiOptions = { language: RU ? "ru" : "en", actionsConfiguration: { twaReturnUrl: BOT } };
+  let wanted = false;
+  ton.onModalStateChange && ton.onModalStateChange(s => { if (s && s.status === "opened") wanted = true; });
+  ton.onStatusChange(w => {
+    render();
+    if (w && wanted) { wanted = false; pay(); }
+  });
+}
+
+async function loadRate() {
+  if (rate > 0) return;
+  try {
+    const j = await getJson("https://tonapi.io/v2/rates?tokens=ton&currencies=usd");
+    rate = Number(j.rates.TON.prices.USD) || 0;
+  } catch (e) { rate = 0; }
+  if (screen === "pay") render();
+}
+
+// ---------- Clicks ----------
+
+document.addEventListener("click", e => {
+  const coinBtn = e.target.closest("[data-coin]");
+  if (coinBtn) { coin = coinBtn.dataset.coin; notice = ""; render(); return; }
+  const cp = e.target.closest("[data-copy]");
+  if (cp) {
+    navigator.clipboard && navigator.clipboard.writeText(cp.dataset.copy).catch(() => {});
+    cp.textContent = T.copied; cp.classList.add("done"); return;
+  }
+  const go = e.target.closest("[data-go]");
+  if (go) { screen = go.dataset.go; notice = ""; render(); window.scrollTo(0, 0); return; }
+  const act = e.target.closest("[data-act]");
+  if (!act) return;
+  if (act.dataset.act === "pay") { act.disabled = true; pay().catch(err => { notice = T.failed(esc(String(err && err.message || err).slice(0, 120))); render(); }); }
+  else if (act.dataset.act === "change") { ton && ton.disconnect().then(render); }
+  else if (act.dataset.act === "close") { if (tg && tg.close) tg.close(); else location.href = BOT; }
+});
+
+document.addEventListener("input", e => {
+  if (e.target.id !== "usd") return;
+  usd = Math.max(0, Math.min(10000, parseFloat(e.target.value.replace(",", ".")) || 0));
+  const est = document.getElementById("est");
+  if (est) est.innerHTML = usd >= MIN_USD ? T.estimate(fmt(estimate(usd))) : T.minAmount(MIN_USD);
+  document.querySelectorAll(".coin .am")[0].textContent = usd.toFixed(2);
+  document.querySelectorAll(".coin .am")[1].textContent = rate > 0 ? "≈ " + gramFor(usd) : "…";
+  const b = document.querySelector("[data-act=pay]");
+  if (b) b.disabled = usd < MIN_USD || (coin === "gram" && !rate);
+});
+
+initTon();
+render();
+loadRate();
+</script>
+</body>
+</html>
