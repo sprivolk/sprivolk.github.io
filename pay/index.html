@@ -211,7 +211,7 @@ function payScreen() {
     <div class="net"><span class="dot"></span>${T.net}</div>
     ${notice ? `<div class="warn">${notice}</div>` : ""}
     ${w ? `<div class="wallet"><span>${T.wallet(esc(wName))}</span><a data-act="change">${T.change}</a></div>` : ""}
-    <button class="big" data-act="pay" ${usd < MIN_USD || (coin === "gram" && !rate) ? "disabled" : ""}>${w ? T.payFrom(esc(wName)) : T.connectPay}</button>
+    ${payButton()}
     <div class="links"><button class="ghost" data-go="manual">${T.manual}</button><button class="ghost" data-go="how">${T.howBuy}</button></div>
     <div class="small">${T.foot(esc(accountText()))}</div>`;
 }
@@ -257,8 +257,26 @@ function drawQr() {
 }
 
 // ---------- The wallet ----------
+// Telegram lets the page open the wallet only straight from the tap: so everything (the library, the balances, the transfer)
+// is made BEFORE the tap, when the wallet connects or the coin / amount changes; the tap only hands it to the wallet.
 
-let core = null;   // @ton/core, loaded when first needed
+Object.assign(T, RU ? {
+  checking: "Проверяю кошелёк…", confirm: w => `Подтвердите перевод в ${w}…`,
+  notOpened: "Если кошелёк не открылся — откройте его сами: там ждёт запрос на подтверждение. Или нажмите «Оплатить» ещё раз.",
+  empty: "Подключённый кошелёк пустой. Пополните его (Gram или USDT в сети TON) — или выберите «Перевести вручную».",
+  retry: "Проверить ещё раз",
+} : {
+  checking: "Checking the wallet…", confirm: w => `Confirm the transfer in ${w}…`,
+  notOpened: "If the wallet did not open — open it yourself: the request is waiting there. Or press «Pay» again.",
+  empty: "The connected wallet is empty. Top it up (Gram or USDT on TON) — or pick «Send by hand».",
+  retry: "Check again",
+});
+
+let core = null;          // @ton/core
+let prep = null;          // { key, state: "loading" | "ready" | "blocked", messages, notice }
+let busy = false;         // waiting for the wallet's answer
+let busyTimer = 0;
+
 async function tonCore() {
   if (!core) core = await import("https://esm.sh/@ton/core@0.59.0");
   return core;
@@ -268,10 +286,17 @@ function commentCell(c) {
   return c.beginCell().storeUint(0, 32).storeStringTail(CODE).endCell();
 }
 
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// toncenter without a key: about one request a second — a 429 is waited out and asked again.
 async function getJson(url) {
-  const r = await fetch(url);
-  if (!r.ok) throw new Error("HTTP " + r.status);
-  return r.json();
+  for (let i = 0; i < 4; i++) {
+    const r = await fetch(url);
+    if (r.status === 429) { await sleep(1300 + i * 700); continue; }
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  }
+  throw new Error("HTTP 429");
 }
 
 async function tonBalance(raw) {
@@ -285,88 +310,127 @@ async function usdtWallet(raw) {
   return w ? { address: w.address, balance: Number(w.balance || 0) / 1e6 } : null;
 }
 
-async function pay() {
-  notice = "";
-  if (!ton.wallet) { await ton.openModal(); return; }   // after connecting, onStatusChange calls pay() again
-  const c = await tonCore();
-  const me = ton.wallet.account.address;                // raw 0:…
-  const messages = [];
-  let checked = true;
-  if (coin === "usdt") {
-    let jw = null, gas = 0;
-    try { jw = await usdtWallet(me); await new Promise(r => setTimeout(r, 1100)); gas = await tonBalance(me); }
-    catch (e) { checked = false; }
-    if (checked) {
-      if (!jw || jw.balance <= 0) { notice = T.noUsdt; render(); return; }
-      if (jw.balance + 1e-9 < usd) { notice = T.fewUsdt(jw.balance.toFixed(2), usd.toFixed(2)); render(); return; }
-      if (gas < GAS_TON + 0.005) { notice = T.noGas(gas.toFixed(3)); render(); return; }
-    }
-    if (!jw) { notice = T.checkFailed; render(); return; }
-    const body = c.beginCell()
-      .storeUint(0x0f8a7ea5, 32).storeUint(BigInt(Date.now()), 64)
-      .storeCoins(BigInt(Math.round(usd * 1e6)))
-      .storeAddress(c.Address.parse(OWNER))
-      .storeAddress(c.Address.parse(me))
-      .storeBit(0)
-      .storeCoins(1n)
-      .storeBit(1).storeRef(commentCell(c))
-      .endCell();
-    messages.push({ address: c.Address.parse(jw.address).toString({ bounceable: true }), amount: String(Math.round(GAS_TON * 1e9)), payload: body.toBoc().toString("base64") });
-  } else {
-    const gram = gramFor(usd);
-    try {
-      const have = await tonBalance(me);
-      if (have < gram + 0.01) { notice = T.fewTon(have.toFixed(2), gram); render(); return; }
-    } catch (e) { /* not checked: let the wallet say */ }
-    messages.push({ address: OWNER, amount: String(Math.round(gram * 1e9)), payload: commentCell(c).toBoc().toString("base64") });
-  }
+const prepKey = () => ton && ton.wallet ? `${ton.wallet.account.address}|${coin}|${usd}|${rate}` : "";
+const walletName = () => (ton && ton.wallet && ton.walletInfo && ton.walletInfo.name) || "Wallet";
+
+/** Makes the transfer for the connected wallet, the coin and the amount now (balances checked); renders when done. */
+async function prepare() {
+  const key = prepKey();
+  if (!key || usd < MIN_USD || (coin === "gram" && !rate)) { prep = null; render(); return; }
+  if (prep && prep.key === key && prep.state !== "blocked") return;
+  prep = { key, state: "loading" };
+  render();
+  const result = { key, state: "ready", messages: [], notice: "" };
   try {
-    await ton.sendTransaction({ validUntil: Math.floor(Date.now() / 1000) + 600, messages });
-    screen = "sent";
+    const c = await tonCore();
+    const me = ton.wallet.account.address;   // raw 0:…
+    const have = await tonBalance(me);
+    if (coin === "usdt") {
+      await sleep(1100);
+      const jw = await usdtWallet(me);
+      if (!jw || jw.balance <= 0) result.notice = have <= 0 ? T.empty : T.noUsdt;
+      else if (jw.balance + 1e-9 < usd) result.notice = T.fewUsdt(jw.balance.toFixed(2), usd.toFixed(2));
+      else if (have < GAS_TON + 0.005) result.notice = T.noGas(have.toFixed(3));
+      else {
+        const body = c.beginCell()
+          .storeUint(0x0f8a7ea5, 32).storeUint(BigInt(Date.now()), 64)
+          .storeCoins(BigInt(Math.round(usd * 1e6)))
+          .storeAddress(c.Address.parse(OWNER))
+          .storeAddress(c.Address.parse(me))
+          .storeBit(0)
+          .storeCoins(1n)
+          .storeBit(1).storeRef(commentCell(c))
+          .endCell();
+        result.messages.push({ address: c.Address.parse(jw.address).toString({ bounceable: true }), amount: String(Math.round(GAS_TON * 1e9)),
+                               payload: body.toBoc().toString("base64") });
+      }
+    } else {
+      const gram = gramFor(usd);
+      if (have <= 0) result.notice = T.empty;
+      else if (have < gram + 0.01) result.notice = T.fewTon(have.toFixed(2), gram);
+      else result.messages.push({ address: OWNER, amount: String(Math.round(gram * 1e9)), payload: commentCell(c).toBoc().toString("base64") });
+    }
   } catch (e) {
+    result.notice = T.failed(esc(String(e && e.message || e).slice(0, 120)));
+  }
+  if (result.notice) result.state = "blocked";
+  if (prepKey() !== key) return;   // changed meanwhile: a newer prepare() runs
+  prep = result;
+  render();
+}
+
+/** The tap: the wallet gets the ready transfer at once (nothing awaited before it). */
+function send() {
+  if (!prep || prep.state !== "ready" || prep.key !== prepKey()) return;
+  busy = true;
+  const request = ton.sendTransaction({ validUntil: Math.floor(Date.now() / 1000) + 600, messages: prep.messages });
+  clearTimeout(busyTimer);
+  busyTimer = setTimeout(() => { if (busy) { busy = false; notice = T.notOpened; render(); } }, 20000);
+  render();
+  request.then(() => {
+    busy = false; clearTimeout(busyTimer);
+    screen = "sent"; notice = "";
+    render();
+  }).catch(e => {
+    busy = false; clearTimeout(busyTimer);
     const msg = (e && (e.message || e.toString())) || "";
     notice = /reject|cancel|declin/i.test(msg) ? T.cancelled : T.failed(esc(msg.slice(0, 120)));
-  }
-  render();
+    render();
+  });
+}
+
+/** The pay button as things stand. */
+function payButton() {
+  if (!(ton && ton.wallet)) return `<button class="big" data-act="pay" ${usd < MIN_USD ? "disabled" : ""}>${T.connectPay}</button>`;
+  if (busy) return `<button class="big" disabled>${T.confirm(esc(walletName()))}</button>`;
+  if (!prep || prep.state === "loading") return `<button class="big" disabled>${T.checking}</button>`;
+  if (prep.state === "blocked") return `<div class="warn">${prep.notice}</div><button class="ghost" data-act="recheck">${T.retry}</button>`;
+  return `<button class="big" data-act="pay">${T.payFrom(esc(walletName()))}</button>`;
 }
 
 function initTon() {
   if (!window.TON_CONNECT_UI) return;
-  ton = new TON_CONNECT_UI.TonConnectUI({ manifestUrl: new URL("tonconnect-manifest.json", location.href).href });
-  ton.uiOptions = { language: RU ? "ru" : "en", actionsConfiguration: { twaReturnUrl: BOT } };
-  let wanted = false;
-  ton.onModalStateChange && ton.onModalStateChange(s => { if (s && s.status === "opened") wanted = true; });
-  ton.onStatusChange(w => {
-    render();
-    if (w && wanted) { wanted = false; pay(); }
+  ton = new TON_CONNECT_UI.TonConnectUI({
+    manifestUrl: new URL("tonconnect-manifest.json", location.href).href,
+    actionsConfiguration: { twaReturnUrl: BOT, returnStrategy: "back", modals: ["before", "error"], notifications: ["error"] },
   });
+  ton.uiOptions = { language: RU ? "ru" : "en", actionsConfiguration: { twaReturnUrl: BOT, returnStrategy: "back", modals: ["before", "error"] } };
+  ton.onStatusChange(() => { prep = null; busy = false; render(); prepare(); });
 }
 
 async function loadRate() {
-  if (rate > 0) return;
-  try {
-    const j = await getJson("https://tonapi.io/v2/rates?tokens=ton&currencies=usd");
-    rate = Number(j.rates.TON.prices.USD) || 0;
-  } catch (e) { rate = 0; }
-  if (screen === "pay") render();
+  if (rate <= 0) {
+    try {
+      const j = await getJson("https://tonapi.io/v2/rates?tokens=ton&currencies=usd");
+      rate = Number(j.rates.TON.prices.USD) || 0;
+    } catch (e) { rate = 0; }
+  }
+  if (screen === "pay") { render(); prepare(); }
 }
 
 // ---------- Clicks ----------
 
+let inputTimer = 0;
+
 document.addEventListener("click", e => {
   const coinBtn = e.target.closest("[data-coin]");
-  if (coinBtn) { coin = coinBtn.dataset.coin; notice = ""; render(); return; }
+  if (coinBtn) { coin = coinBtn.dataset.coin; notice = ""; render(); prepare(); return; }
   const cp = e.target.closest("[data-copy]");
   if (cp) {
     navigator.clipboard && navigator.clipboard.writeText(cp.dataset.copy).catch(() => {});
     cp.textContent = T.copied; cp.classList.add("done"); return;
   }
   const go = e.target.closest("[data-go]");
-  if (go) { screen = go.dataset.go; notice = ""; render(); window.scrollTo(0, 0); return; }
+  if (go) { screen = go.dataset.go; notice = ""; render(); window.scrollTo(0, 0); if (screen === "pay") prepare(); return; }
   const act = e.target.closest("[data-act]");
   if (!act) return;
-  if (act.dataset.act === "pay") { act.disabled = true; pay().catch(err => { notice = T.failed(esc(String(err && err.message || err).slice(0, 120))); render(); }); }
-  else if (act.dataset.act === "change") { ton && ton.disconnect().then(render); }
+  if (act.dataset.act === "pay") {
+    notice = "";
+    if (!(ton && ton.wallet)) { ton && ton.openModal(); return; }
+    send();
+  }
+  else if (act.dataset.act === "recheck") { prep = null; prepare(); }
+  else if (act.dataset.act === "change") { ton && ton.disconnect().then(() => { prep = null; render(); }); }
   else if (act.dataset.act === "close") { if (tg && tg.close) tg.close(); else location.href = BOT; }
 });
 
@@ -377,8 +441,9 @@ document.addEventListener("input", e => {
   if (est) est.innerHTML = usd >= MIN_USD ? T.estimate(fmt(estimate(usd))) : T.minAmount(MIN_USD);
   document.querySelectorAll(".coin .am")[0].textContent = usd.toFixed(2);
   document.querySelectorAll(".coin .am")[1].textContent = rate > 0 ? "≈ " + gramFor(usd) : "…";
-  const b = document.querySelector("[data-act=pay]");
-  if (b) b.disabled = usd < MIN_USD || (coin === "gram" && !rate);
+  // The transfer is made again once typing stops (the input keeps its focus: no render meanwhile).
+  clearTimeout(inputTimer);
+  inputTimer = setTimeout(() => { prep = null; render(); prepare(); const i = document.getElementById("usd"); if (i) i.focus(); }, 700);
 });
 
 initTon();
