@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Как делать карты — Placeholder</title>
+<meta name="description" content="Карты для Placeholder в бесплатном Blender: установка через лаунчер, первая карта, спавны и точки, свет, тест, публикация в мастерскую.">
+<meta property="og:title" content="Как делать карты — Placeholder">
+<meta property="og:description" content="Первая карта за вечер: Blender + аддон Map tools, шаг за шагом.">
+<meta property="og:image" content="https://sprivolk.github.io/img/maps/overview_ru.jpg">
+<meta property="og:url" content="https://sprivolk.github.io/maps.html">
+<meta name="theme-color" content="#07090b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Play:wght@700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* The same tokens as the main page (index.html) and the game's UI kit. */
+:root {
+  color-scheme: dark;
+  --bg-000:#07090b; --bg-100:#0c0f12; --bg-200:#12161a; --bg-300:#191e23;
+  --line-100:#1f252b; --line-200:#343d46; --line-300:#5a6773;
+  --text-100:#eef2f4; --text-200:#aab4bb; --text-300:#808b94;
+  --accent-500:#3aa34a; --accent-text:#4cc95e; --accent-line:#86e894; --accent-base:#1f6a2b;
+  --warning-500:#e0b84c; --error-500:#e5534b; --tg:#2aabee;
+  --radius:3px;
+  --fill-steel:linear-gradient(180deg,#56626e,#3b4550); --edge-steel:#7c8995;
+  --panel:linear-gradient(180deg,#1a2027,#11151a); --panel-edge:rgba(255,255,255,.08); --panel-top:rgba(255,255,255,.14);
+  --well:#0a0d10; --well-edge:rgba(255,255,255,.10);
+  --font-text:"Inter",system-ui,sans-serif; --font-display:"Play","Inter",sans-serif; --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  --wrap:1120px;
+}
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { margin:0; background:var(--bg-000); color:var(--text-100); font:400 16px/1.6 var(--font-text); -webkit-font-smoothing:antialiased; }
+a { color:var(--accent-text); text-decoration:none; }
+a:hover { text-decoration:underline; }
+img { display:block; max-width:100%; height:auto; }
+.wrap { max-width:var(--wrap); margin:0 auto; padding:0 24px; }
+[id] { scroll-margin-top:76px; }
+[hidden] { display:none !important; }
+
+/* Top bar */
+.top { position:sticky; top:0; z-index:20; background:rgba(7,9,11,.86); backdrop-filter:blur(8px); border-bottom:1px solid var(--line-100); }
+.top .wrap { height:60px; display:flex; align-items:center; gap:28px; }
+.logo { font:700 22px var(--font-display); letter-spacing:2px; color:#fff; text-transform:uppercase; display:flex; align-items:center; gap:10px; }
+.logo:hover { text-decoration:none; }
+.logo i { width:12px; height:12px; background:var(--accent-text); box-shadow:0 0 12px rgba(76,201,94,.6); display:block; }
+.back { color:var(--text-200); font:700 13px var(--font-text); letter-spacing:1px; text-transform:uppercase; margin-left:auto; }
+.back:hover { color:#fff; text-decoration:none; }
+.lang { display:inline-flex; gap:2px; padding:3px; background:var(--well); border:1px solid var(--well-edge); border-radius:var(--radius); }
+.lang button { height:30px; padding:0 10px; background:none; border:0; border-radius:2px; cursor:pointer; color:var(--text-300); font:800 12px var(--font-text); letter-spacing:.8px; }
+.lang button:hover { color:#fff; }
+.lang button.is-on { color:#fff; background:var(--fill-steel); box-shadow:inset 0 1px 0 rgba(255,255,255,.2), inset 0 -2px 0 var(--accent-text); }
+
+/* Head of the page */
+.intro { padding:64px 0 40px; border-bottom:1px solid var(--line-100);
+  background:radial-gradient(900px 340px at 20% 0%, rgba(76,201,94,.10), transparent 70%); }
+.intro .kicker { font:500 13px var(--font-mono); color:var(--accent-text); }
+.intro h1 { margin:8px 0 14px; font:700 clamp(36px,6vw,58px)/1.05 var(--font-display); letter-spacing:2px; text-transform:uppercase; }
+.intro .lead { max-width:720px; font-size:18px; color:var(--text-200); margin:0 0 22px; }
+.needs { display:flex; flex-wrap:wrap; gap:10px; margin:0; padding:0; list-style:none; }
+.needs li { padding:7px 12px; background:var(--well); border:1px solid var(--well-edge); border-radius:var(--radius); font-size:14px; color:var(--text-200); }
+.needs b { color:#fff; }
+
+/* Contents */
+.toc { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; margin:30px 0 0; padding:0; list-style:none; counter-reset:t; }
+.toc a { display:block; height:100%; padding:12px 14px 12px 46px; position:relative; color:var(--text-100); font-weight:600; font-size:15px;
+  background:var(--panel); border:1px solid var(--panel-edge); border-top-color:var(--panel-top); border-radius:var(--radius); }
+.toc a:hover { text-decoration:none; border-color:var(--accent-text); }
+.toc li { counter-increment:t; }
+.toc a::before { content:counter(t); position:absolute; left:14px; top:12px; font:700 15px var(--font-display); color:var(--accent-text); }
+
+/* Sections */
+section { padding:64px 0; border-bottom:1px solid var(--line-100); }
+h2 { margin:0 0 8px; font:700 32px var(--font-display); letter-spacing:2px; text-transform:uppercase; }
+h2 .n { color:var(--accent-text); margin-right:10px; }
+h3 { margin:34px 0 10px; font:700 19px var(--font-text); }
+.sub { color:var(--text-300); margin:0 0 24px; max-width:720px; }
+p { margin:0 0 14px; }
+.split { display:grid; grid-template-columns:minmax(0,1fr) 273px; gap:36px; align-items:start; }
+.split + .split { margin-top:18px; }
+.steps { counter-reset:s; list-style:none; margin:0 0 14px; padding:0; display:flex; flex-direction:column; gap:8px; }
+.steps > li { counter-increment:s; position:relative; padding:13px 16px 13px 56px;
+  background:var(--panel); border:1px solid var(--panel-edge); border-top-color:var(--panel-top); border-radius:var(--radius); }
+.steps > li::before { content:counter(s); position:absolute; left:14px; top:12px; width:28px; height:28px; display:flex; align-items:center; justify-content:center;
+  font:700 14px var(--font-display); color:#fff; background:var(--fill-steel); border:1px solid var(--edge-steel); border-radius:var(--radius); }
+.list { margin:0 0 14px; padding-left:20px; }
+.list li { margin:5px 0; }
+b, strong { color:#fff; }
+/* A button's name as it reads in Blender / the launcher. */
+.k { font:600 13.5px var(--font-text); background:var(--well); border:1px solid var(--well-edge); padding:1px 7px; border-radius:2px; color:#fff; white-space:nowrap; }
+.k i { font-style:normal; color:var(--text-300); font-weight:500; }
+kbd { font:500 12.5px var(--font-mono); background:var(--bg-300); border:1px solid var(--line-200); border-bottom-width:2px; padding:0 6px; border-radius:3px; color:#fff; white-space:nowrap; }
+.note { padding:12px 16px; margin:14px 0; border-left:3px solid var(--accent-text); background:rgba(76,201,94,.06); border-radius:0 var(--radius) var(--radius) 0; color:var(--text-200); }
+.note.warn { border-left-color:var(--warning-500); background:rgba(224,184,76,.07); }
+.note b { color:#fff; }
+
+/* Screenshots */
+figure { margin:0; }
+.shot { border:1px solid var(--line-200); border-radius:var(--radius); overflow:hidden; background:var(--bg-200); cursor:zoom-in; }
+.shot img { width:100%; }
+figcaption { font-size:13px; color:var(--text-300); margin-top:8px; }
+.wide { margin:22px 0; }
+.panel-shot { max-width:273px; }
+.panel-shot img { image-rendering:auto; }
+
+/* Mode table */
+.modes { width:100%; border-collapse:collapse; margin:8px 0 14px; font-size:15px; }
+.modes th, .modes td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--line-100); vertical-align:top; }
+.modes th { font:700 12px var(--font-text); letter-spacing:1px; text-transform:uppercase; color:var(--text-300); }
+.modes td:first-child { font-weight:700; color:#fff; white-space:nowrap; }
+.modes tr:hover td { background:rgba(255,255,255,.02); }
+
+/* Common errors */
+.errs { display:grid; gap:10px; }
+.err { padding:14px 16px; background:var(--panel); border:1px solid var(--panel-edge); border-top-color:var(--panel-top); border-radius:var(--radius); }
+.err .what { font-weight:700; color:#fff; margin-bottom:4px; }
+.err .what code { font:500 13.5px var(--font-mono); color:var(--warning-500); }
+.err p { margin:0; color:var(--text-200); }
+
+.lightbox { position:fixed; inset:0; z-index:50; background:rgba(0,0,0,.9); display:none; align-items:center; justify-content:center; padding:24px; cursor:zoom-out; }
+.lightbox.is-open { display:flex; }
+.lightbox img { max-height:94vh; max-width:96vw; border-radius:var(--radius); }
+
+footer { padding:40px 0 50px; color:var(--text-300); font-size:14px; }
+footer .wrap { display:flex; gap:20px; flex-wrap:wrap; align-items:center; justify-content:space-between; }
+
+@media (max-width:860px) {
+  .split { grid-template-columns:1fr; }
+  .panel-shot { max-width:320px; }
+}
+@media (max-width:640px) {
+  .wrap { padding:0 16px; }
+  .top .wrap { gap:12px; }
+  .back span { display:none; }
+  section { padding:48px 0; }
+  h2 { font-size:26px; }
+  .steps > li { padding:12px 12px 12px 52px; }
+  .modes td:first-child { white-space:normal; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="index.html"><i></i>Placeholder</a>
+    <a class="back" href="index.html" data-t="back">← <span>На главную</span></a>
+    <div class="lang" role="group" aria-label="Language"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
+  </div>
+</header>
+
+<!-- ======================================================= RU ======================================================= -->
+<main data-lang-block="ru">
+
+<div class="intro">
+  <div class="wrap">
+    <span class="kicker">// мастерская</span>
+    <h1>Как делать карты</h1>
+    <p class="lead">Карты для Placeholder делаются в бесплатном Blender с нашим аддоном <b>Map tools</b>. Ничего не нужно уметь заранее: за вечер можно собрать первую карту, сыграть на ней и выложить её в мастерскую.</p>
+    <ul class="needs">
+      <li><b>ПК на Windows</b> с установленной игрой</li>
+      <li><b>Лаунчер</b> Placeholder</li>
+      <li><b>Blender 5.2</b> или новее — бесплатно</li>
+    </ul>
+    <ol class="toc">
+      <li><a href="#install">Установка</a></li>
+      <li><a href="#first-map">Первая карта</a></li>
+      <li><a href="#modes">Спавны, точки, зоны закупки</a></li>
+      <li><a href="#light">Свет и запекание</a></li>
+      <li><a href="#export">Проверка, тест и экспорт</a></li>
+      <li><a href="#publish">Публикация</a></li>
+      <li><a href="#errors">Частые ошибки</a></li>
+    </ol>
+  </div>
+</div>
+
+<section data-id="install">
+  <div class="wrap">
+    <h2><span class="n">1</span>Установка</h2>
+    <p class="sub">Всё ставится из лаунчера, вкладка <span class="k">Мастерская</span>, блок <b>«Инструменты для карт»</b>.</p>
+    <ol class="steps">
+      <li><b>Blender.</b> Если лаунчер пишет «Blender не найден», скачайте Blender 5.2 или новее с сайта <a href="https://www.blender.org/download/" target="_blank" rel="noopener">blender.org</a> и установите. Blender уже стоит, а лаунчер его не видит? Нажмите <span class="k">Указать blender.exe</span>.</li>
+      <li><b>Аддон.</b> Нажмите <span class="k">Установить в Blender</span>. Лаунчер сам поставит аддон Map tools и включит его. Когда выйдет новая версия, на этом месте появится кнопка <span class="k">Обновить</span>.</li>
+      <li><b>Игра для теста.</b> Должна быть строка «“Test and play” в Blender сам запустит эту игру». Если там написано «Игра ещё не установлена», сначала установите игру на вкладке <span class="k">Игра</span>.</li>
+      <li>Нажмите <span class="k">Новая карта</span>. Лаунчер откроет Blender сразу с окном новой карты (дальше — раздел 2).</li>
+    </ol>
+    <div class="note">Лаунчер пока есть только для Windows. На Mac и Linux аддон можно поставить в Blender вручную — напишите нам в <a href="https://t.me/placeholder_shooter" target="_blank" rel="noopener">Телеграм</a>, подскажем.</div>
+  </div>
+</section>
+
+<section data-id="first-map">
+  <div class="wrap">
+    <h2><span class="n">2</span>Первая карта</h2>
+    <p class="sub">Карта собирается из простых блоков — <b>брашей</b>: пол, стены, ящики, лестницы. Сначала делают «коробку» из одноцветных блоков (это называется блокаут), играют, правят, и только потом украшают.</p>
+
+    <h3>Новая карта</h3>
+    <ol class="steps">
+      <li>В окне новой карты впишите <b>название</b>: латинские буквы, цифры и <kbd>_</kbd>, например <b>de_mymap</b>. Это имя карты в игре.</li>
+      <li>Нажмите <span class="k">OK</span>. Готово: в карте уже есть пол, по одному спавну для T и CT, сетка и четыре вида (сверху, спереди, сбоку и 3D).</li>
+      <li>Файл сохраняется в <b>Документы → PlaceholderShooter Maps → de_mymap</b>. Не забывайте сохранять: <kbd>Ctrl</kbd>+<kbd>S</kbd>.</li>
+    </ol>
+    <p>Все кнопки аддона — на <b>боковой панели</b> справа в окне вида (если её нет, нажмите <kbd>N</kbd> над видом). Вкладки идут по порядку работы: <span class="k">Стройка <i>Build</i></span> → <span class="k">Объект <i>Object</i></span> → <span class="k">Энтити <i>Entities</i></span> → <span class="k">Арт <i>Art</i></span> → <span class="k">Свет <i>Light</i></span> → <span class="k">Показ <i>Show</i></span> → <span class="k">Игра <i>Play</i></span>. Аддон говорит на языке вашего Blender; здесь у кнопок в скобках стоит английское название.</p>
+    <figure class="wide"><div class="shot"><img src="img/maps/overview_ru.jpg" width="1400" height="768" alt="Простая карта: стены, дом в центре, спавны, точки A и B, зоны закупки" loading="lazy"></div>
+      <figcaption>Простая карта для 2×2: стены по краю, дом в центре, спавны T и CT, точки A и B, зоны закупки. Справа — вкладка «Стройка».</figcaption></figure>
+
+    <h3>Стены, пол, комнаты</h3>
+    <div class="split">
+      <div>
+        <ul class="list">
+          <li><span class="k">Нарисовать браш <i>Draw brush</i></span> — главный инструмент. В виде сверху протяните прямоугольник, затем в виде спереди или сбоку — высоту. Жёлтые ручки меняют размер, перетаскивание внутри двигает. <kbd>Enter</kbd> — готово.</li>
+          <li><span class="k">Бокс <i>Box</i></span> — готовый блок у 3D-курсора. Курсор ставится <kbd>Shift</kbd>+правый клик. Размеры — в панели слева внизу (<kbd>F9</kbd>).</li>
+          <li><span class="k">Сделать комнату <i>Make a room</i></span> — выделенный блок становится комнатой: пол, потолок и четыре стены.</li>
+          <li><span class="k">Дверь</span>, <span class="k">Окно</span>, <span class="k">Дыра</span> — проём в выделенной стене (или дыра в полу) там, где стоит 3D-курсор. Размер — снова <kbd>F9</kbd>.</li>
+          <li><span class="k">Ступени <i>Stairs</i></span>, <span class="k">Цилиндр</span>, <span class="k">Арка</span> — готовые формы.</li>
+          <li><kbd>[</kbd> и <kbd>]</kbd> — сетка мельче / крупнее. Всё прилипает к сетке; <span class="k">К сетке <i>Snap</i></span> выровняет то, что сбилось.</li>
+          <li><kbd>Q</kbd> над видом — круговое меню инструментов у мыши, <kbd>F</kbd> — настройки выделенного.</li>
+        </ul>
+        <div class="note"><b>Масштаб.</b> Размеры в аддоне — в юнитах, как в CS: 16 юнитов = 40 см, обычная дверь — 64×112 юнитов. Сетка подписана внизу вида.</div>
+        <h3>Края карты</h3>
+        <p>Карта должна быть <b>замкнута</b>: обнесите её стенами без щелей, углы стен должны сходиться. Потом выделите внешние стены и нажмите <span class="k">Край карты <i>Map edge</i></span> — аддон поставит над ними невидимые стенки, чтобы никто не выпрыгнул наружу.</p>
+        <h3>Цвета и поверхности</h3>
+        <p>Выделите браш и нажмите кнопку в <span class="k">Материалы блокаута <i>Blockout materials</i></span>. <b>Цвета</b> — просто чтобы различать части карты. <b>Поверхности</b> (бетон, металл, дерево…) влияют на звук шагов и на то, как пули пробивают стену. Красивые текстуры, модели и декали — на вкладке <span class="k">Арт <i>Art</i></span>, когда блокаут уже играется.</p>
+      </div>
+      <figure class="panel-shot"><div class="shot"><img src="img/maps/build_ru.jpg" width="271" height="823" alt="Вкладка «Стройка»" loading="lazy"></div><figcaption>Вкладка «Стройка»: карта и сетка, браши, инструменты, материалы.</figcaption></figure>
+    </div>
+
+    <h3>Двери, стекло, модели</h3>
+    <div class="split">
+      <div>
+        <p>Выделите браш и откройте вкладку <span class="k">Объект <i>Object</i></span>. Там видно, с чем он сталкивается (игроки, пули, гранаты), и есть кнопки <span class="k">Сделать: Модель / Дверь / Выдвижной / Стекло</span>: браш станет открывающейся дверью, выдвижной стенкой или бьющимся стеклом.</p>
+      </div>
+      <figure class="panel-shot"><div class="shot"><img src="img/maps/object_ru.jpg" width="271" height="298" alt="Вкладка «Объект»" loading="lazy"></div><figcaption>Выделенный браш: коллизия и «Сделать:».</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section data-id="modes">
+  <div class="wrap">
+    <h2><span class="n">3</span>Спавны, точки, зоны закупки</h2>
+    <p class="sub">Всё игровое — на вкладке <span class="k">Энтити <i>Entities</i></span>. Кнопка ставит объект у 3D-курсора (<kbd>Shift</kbd>+правый клик по полу, потом кнопка).</p>
+    <div class="split">
+      <div>
+        <ul class="list">
+          <li><span class="k">Спавн T</span>, <span class="k">Спавн CT</span> — где появляются игроки. Ставьте на пол, не в стену. Ставьте <b>по 5 на сторону</b> для 5×5 и по 2 для «Напарников»: если спавнов меньше, чем игроков, они появятся друг в друге.</li>
+          <li><span class="k">Точка A</span>, <span class="k">Точка B</span> — объёмы на полу, где ставят бомбу.</li>
+          <li><span class="k">Зона закупки T / CT</span> — где сторона покупает оружие в начале раунда. Обычно вокруг её спавнов.</li>
+          <li><span class="k">Лестница <i>Ladder</i></span> — тонкий объём у стены, по которому можно лезть. <span class="k">Зона смерти <i>Kill zone</i></span> — кто зайдёт, погибает (обрыв, вода).</li>
+        </ul>
+        <div class="note warn"><b>Сначала снимите выделение</b> (<kbd>Alt</kbd>+<kbd>A</kbd>). Если выделен браш, кнопка зоны превращает <b>его</b> в эту зону — так удобно задать зоне точную форму, но так же легко случайно превратить стену в точку закладки. Случилось — <kbd>Ctrl</kbd>+<kbd>Z</kbd>.</div>
+      </div>
+      <figure class="panel-shot"><div class="shot"><img src="img/maps/entities_ru.jpg" width="271" height="248" alt="Вкладка «Энтити»" loading="lazy"></div><figcaption>Вкладка «Энтити»: игроки и зоны.</figcaption></figure>
+    </div>
+    <h3>Что нужно каждому режиму</h3>
+    <table class="modes">
+      <thead><tr><th>Режим</th><th>Что должно быть на карте</th></tr></thead>
+      <tbody>
+        <tr><td>Песочница</td><td>Ничего, кроме пола: побегать и посмотреть карту.</td></tr>
+        <tr><td>Все против всех</td><td>Спавны (любой стороны).</td></tr>
+        <tr><td>Командный бой</td><td>Спавны T и спавны CT — на разных концах карты.</td></tr>
+        <tr><td>Напарники 2×2</td><td>Спавны T и CT, <b>одна</b> точка закладки, зоны закупки.</td></tr>
+        <tr><td>Закладка бомбы 5×5</td><td>Спавны T и CT, точки <b>A и B</b>, зоны закупки.</td></tr>
+      </tbody>
+    </table>
+    <p>Если для режима чего-то не хватает, аддон предупредит, а игра предложит на этой карте только «Песочницу» и «Все против всех». Радар (карта в углу экрана) делается сам при экспорте.</p>
+  </div>
+</section>
+
+<section data-id="light">
+  <div class="wrap">
+    <h2><span class="n">4</span>Свет и запекание</h2>
+    <p class="sub">Свет в игре заранее «запекается» в текстуры: так карта красиво выглядит и быстро работает даже на телефоне.</p>
+    <div class="split">
+      <div>
+        <ol class="steps">
+          <li><b>Небо.</b> Вкладка <span class="k">Свет <i>Light</i></span> → <span class="k">Небо</span>: откройте свою картинку неба, возьмите из <span class="k">Библиотеки</span> или нажмите <span class="k">Сделать небо</span>.</li>
+          <li><b>Солнце.</b> <span class="k">Солнце и лампы</span> → <span class="k">Солнце</span>. Стрелка солнца показывает, куда идёт свет; поверните его клавишей <kbd>R</kbd>. Где оно стоит — неважно. <span class="k">Предпросмотр теней солнца</span> покажет тени прямо в Blender.</li>
+          <li><b>Лампы</b> — для помещений: <span class="k">Лампа</span> ставится у курсора, яркость и дальность — в <kbd>F9</kbd>. <span class="k">Зона подсветки</span> слегка высветляет слишком тёмные углы.</li>
+          <li><b>Запекание</b> — на вкладке <span class="k">Игра</span>, шаг 3 (ниже). Пока свет не запечён, в тесте карта освещена ровным «тестовым светом» — для проверки геймплея этого хватает.</li>
+        </ol>
+      </div>
+      <figure class="panel-shot"><div class="shot"><img src="img/maps/light_ru.jpg" width="271" height="338" alt="Вкладка «Свет»" loading="lazy"></div><figcaption>Вкладка «Свет»: небо, солнце и лампы, запечённый свет.</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section data-id="export">
+  <div class="wrap">
+    <h2><span class="n">5</span>Проверка, тест и экспорт</h2>
+    <p class="sub">Вкладка <span class="k">Игра <i>Play</i></span> устроена по шагам — сверху вниз.</p>
+    <div class="split">
+      <div>
+        <ol class="steps">
+          <li><span class="k">1 · Проверка</span> → <span class="k">Проверить карту</span>. Аддон найдёт, что сломается в игре: спавн в воздухе, дыру наружу, нет точки закладки. Лупа рядом с проблемой показывает её место. Знак <b>✓</b> — всё хорошо.</li>
+          <li><span class="k">2 · Тест на этом компьютере</span>: выберите <b>Режим</b> и нажмите <span class="k">Тест и игра <i>Test and play</i></span>. Аддон сохранит карту, соберёт её и запустит игру прямо на ней, без входа в аккаунт. Если игра уже открыта — карта загрузится в ней. Поправили — жмите снова.</li>
+          <li><span class="k">3 · Запечь свет и играть</span>: <span class="k">Быстро и играть</span> — грубый свет за секунды, чтобы прикинуть. <span class="k">Финально и играть</span> — чистые тени, занимает минуты; там же можно выбрать <b>«Финальное релиз»</b> — самые гладкие края теней (в 4 раза дольше), для публикации. Если с прошлого запекания ничего не менялось, повторно не печёт.</li>
+          <li><span class="k">4 · Поделиться (.psmap)</span>: <span class="k">Экспорт .psmap</span> — вся карта в одном файле рядом с .blend; <span class="k">Финальное запекание и экспорт .psmap</span> — то же с финальным светом.</li>
+        </ol>
+        <p>Экспортированная карта появляется в лаунчере: <span class="k">Мастерская</span> → <span class="k">Мои карты</span>. Там есть <span class="k">Играть</span> (игра откроет «Свой сервер» с этой картой — режим выберете там), <span class="k">Открыть в Blender</span> и <span class="k">Показать в папке</span>.</p>
+        <p>Перед публикацией заполните <span class="k">Карточка Мастерской</span> внизу вкладки: название, автор, описание, версия. Поставьте вид покрасивее и нажмите <span class="k">Сделать картинку (этот вид)</span> — это обложка карты.</p>
+      </div>
+      <figure class="panel-shot"><div class="shot"><img src="img/maps/play_ru.jpg" width="271" height="418" alt="Вкладка «Игра»" loading="lazy"></div><figcaption>Вкладка «Игра»: проверка → тест → запекание → файл.</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section data-id="publish">
+  <div class="wrap">
+    <h2><span class="n">6</span>Публикация</h2>
+    <p class="sub">Опубликованную карту видят все игроки: в лаунчере и в игре, в мастерской.</p>
+    <ol class="steps">
+      <li>Экспортируйте карту (раздел 5) — лучше с финальным светом.</li>
+      <li>Лаунчер → <span class="k">Мастерская</span> → <span class="k">Каталог</span> → <span class="k">Опубликовать карту</span>.</li>
+      <li>Карта публикуется от вашего аккаунта: откройте игру и нажмите в лаунчере <span class="k">Войти через игру</span>.</li>
+      <li>Выберите карту, напишите описание (что это за карта, как в неё играть), отметьте теги, добавьте до 5 скриншотов и нажмите <span class="k">Опубликовать</span>.</li>
+      <li>Новая версия: экспортируйте карту снова, откройте её в «Каталоге» (помечена «Ваша карта») и нажмите <span class="k">Опубликовать новую версию</span>. В поле «Что нового в этой версии» напишите, что поменялось.</li>
+    </ol>
+    <p><b>Без публикации:</b> файл <b>.psmap</b> можно просто отправить другу. Он перетащит его в лаунчер (<span class="k">Скачанные</span>) или нажмёт <span class="k">+ Добавить карту (.psmap)</span> — карта появится и в игре.</p>
+    <p><b>В игре:</b> Мастерская → <span class="k">Каталог</span> или <span class="k">На устройстве</span> → <span class="k">Играть</span>: откроется «Свой сервер» с картой и её режимами — можно позвать друзей.</p>
+  </div>
+</section>
+
+<section data-id="errors">
+  <div class="wrap">
+    <h2><span class="n">7</span>Частые ошибки</h2>
+    <p class="sub">Почти все проблемы находит <span class="k">Проверить карту</span> на вкладке «Игра». Нажмите лупу рядом с ошибкой — вид покажет, где она.</p>
+    <figure class="wide"><div class="shot"><img src="img/maps/leak_ru.jpg" width="1400" height="768" alt="Красная линия показывает, где игроки уходят за край карты" loading="lazy"></div>
+      <figcaption>Стену приподняли — и игроки могут пролезть под ней за край карты. Красная линия ведёт к щели.</figcaption></figure>
+    <div class="errs">
+      <div class="err"><div class="what"><code>Утечка: карта не замкнута…</code></div><p>Где-то есть щель наружу, красная линия ведёт к ней. Чаще всего это угол, где стены не сошлись. Закройте щель стеной и выделите внешние стены → <span class="k">Край карты</span>.</p></div>
+      <div class="err"><div class="what"><code>Игроки доходят до самого края карты…</code></div><p>Игрок может выйти туда, где дальше ничего нет, и упасть. Поставьте стену или <span class="k">Край карты</span> на этом месте.</p></div>
+      <div class="err"><div class="what"><code>Нет спавна для T</code> / <code>для CT</code></div><p>Добавьте спавны на вкладке «Энтити» → «Игроки».</p></div>
+      <div class="err"><div class="what"><code>…: под ним нет пола</code> / <code>внутри браша</code></div><p>Спавн висит в воздухе или стоит в стене. Опустите его на пол (поставьте 3D-курсор на пол и добавьте спавн заново).</p></div>
+      <div class="err"><div class="what"><code>Режиму … нужно: …</code></div><p>Для выбранного режима не хватает спавнов или точек (таблица в разделе 3). Без них игра покажет только «Песочницу» и «Все против всех».</p></div>
+      <div class="err"><div class="what"><code>Пар брашей с гранями одна над другой…</code></div><p>Два браша наложились, и стена в игре будет мерцать. Сдвиньте один, чтобы они только касались.</p></div>
+      <div class="err"><div class="what"><code>Не замкнут: есть дыры</code></div><p>У объекта нет части граней. На вкладке «Объект»: <span class="k">Сделать сплошным</span> или <span class="k">Показать дыры</span>.</p></div>
+      <div class="err"><div class="what"><code>Вне коллекции карты</code></div><p>Объект лежит не в карте, и в игру он не попадёт. Кнопка <span class="k">Перенести в карту</span> на вкладке «Объект».</p></div>
+      <div class="err"><div class="what"><code>Игра не задана</code> / <code>Игра слишком старая</code></div><p>Установите или обновите игру через лаунчер — «Тест и игра» найдёт её сама.</p></div>
+      <div class="err"><div class="what">Добавил зону — и пропала стена</div><p>Была выделена стена, и кнопка зоны превратила её в зону. <kbd>Ctrl</kbd>+<kbd>Z</kbd>, снимите выделение (<kbd>Alt</kbd>+<kbd>A</kbd>) и добавьте зону снова.</p></div>
+    </div>
+    <p style="margin-top:24px">Остались вопросы? Список клавиш есть в самом аддоне: вкладка «Стройка» → <span class="k">Клавиши и помощь</span>. А ещё можно спросить в чате тестеров в <a href="https://t.me/placeholder_shooter" target="_blank" rel="noopener">Телеграме</a>.</p>
+  </div>
+</section>
+</main>
+
+<!-- ======================================================= EN ======================================================= -->
+<main data-lang-block="en" hidden>
+
+<div class="intro">
+  <div class="wrap">
+    <span class="kicker">// workshop</span>
+    <h1>How to make maps</h1>
+    <p class="lead">Maps for Placeholder are made in free Blender with our <b>Map tools</b> add-on. You don't need to know anything beforehand: in one evening you can build your first map, play it and put it in the workshop.</p>
+    <ul class="needs">
+      <li><b>A Windows PC</b> with the game installed</li>
+      <li>The Placeholder <b>launcher</b></li>
+      <li><b>Blender 5.2</b> or newer — free</li>
+    </ul>
+    <ol class="toc">
+      <li><a href="#install">Install</a></li>
+      <li><a href="#first-map">Your first map</a></li>
+      <li><a href="#modes">Spawns, bomb sites, buy zones</a></li>
+      <li><a href="#light">Light and baking</a></li>
+      <li><a href="#export">Check, test and export</a></li>
+      <li><a href="#publish">Publishing</a></li>
+      <li><a href="#errors">Common mistakes</a></li>
+    </ol>
+  </div>
+</div>
+
+<section data-id="install">
+  <div class="wrap">
+    <h2><span class="n">1</span>Install</h2>
+    <p class="sub">Everything is installed from the launcher: the <span class="k">Workshop</span> tab, the <b>«Map tools»</b> block.</p>
+    <ol class="steps">
+      <li><b>Blender.</b> If the launcher says «Blender not found», download Blender 5.2 or newer from <a href="https://www.blender.org/download/" target="_blank" rel="noopener">blender.org</a> and install it. Blender is there but the launcher doesn't see it? Press <span class="k">Pick blender.exe</span>.</li>
+      <li><b>The add-on.</b> Press <span class="k">Install into Blender</span>. The launcher puts the Map tools add-on into Blender and enables it. When a new version is out, an <span class="k">Update</span> button shows up here.</li>
+      <li><b>Game for testing.</b> It should say «“Test and play” in Blender starts this game by itself». If it says «The game is not installed yet», install the game on the <span class="k">Game</span> tab first.</li>
+      <li>Press <span class="k">New map</span>. The launcher opens Blender with the new map window (see part 2).</li>
+    </ol>
+    <div class="note">The launcher is Windows-only for now. On Mac and Linux the add-on can be put into Blender by hand — ask us in <a href="https://t.me/placeholder_shooter" target="_blank" rel="noopener">Telegram</a> and we'll help.</div>
+  </div>
+</section>
+
+<section data-id="first-map">
+  <div class="wrap">
+    <h2><span class="n">2</span>Your first map</h2>
+    <p class="sub">A map is built of simple blocks called <b>brushes</b>: floors, walls, crates, stairs. First you make a plain one-colour «box» version (a blockout), play it, fix it — and only then make it pretty.</p>
+
+    <h3>A new map</h3>
+    <ol class="steps">
+      <li>In the new map window type a <b>name</b>: Latin letters, digits and <kbd>_</kbd>, like <b>de_mymap</b>. That's the map's name in the game.</li>
+      <li>Press <span class="k">OK</span>. Done: the map already has a floor, one spawn for T and one for CT, the grid and four views (top, front, side and 3D).</li>
+      <li>The file is saved in <b>Documents → PlaceholderShooter Maps → de_mymap</b>. Save often: <kbd>Ctrl</kbd>+<kbd>S</kbd>.</li>
+    </ol>
+    <p>All the add-on's buttons are on the <b>sidebar</b> on the right of the view (no sidebar? press <kbd>N</kbd> over the view). The tabs follow the work: <span class="k">Build</span> → <span class="k">Object</span> → <span class="k">Entities</span> → <span class="k">Art</span> → <span class="k">Light</span> → <span class="k">Show</span> → <span class="k">Play</span>. The add-on speaks your Blender's language.</p>
+    <figure class="wide"><div class="shot"><img src="img/maps/overview_en.jpg" width="1400" height="768" alt="A simple map: walls, a house in the middle, spawns, sites A and B, buy zones" loading="lazy"></div>
+      <figcaption>A simple 2v2 map: walls round the edge, a house in the middle, T and CT spawns, sites A and B, buy zones. On the right: the Build tab.</figcaption></figure>
+
+    <h3>Walls, floors, rooms</h3>
+    <div class="split">
+      <div>
+        <ul class="list">
+          <li><span class="k">Draw brush</span> — the main tool. Drag a rectangle in the top view, then its height in the front or side view. Yellow handles resize it, dragging inside moves it. <kbd>Enter</kbd> — done.</li>
+          <li><span class="k">Box</span> — a ready block at the 3D cursor. Place the cursor with <kbd>Shift</kbd>+right click. Its size is in the panel at the bottom left (<kbd>F9</kbd>).</li>
+          <li><span class="k">Make a room</span> — the selected block becomes a room: floor, ceiling and four walls.</li>
+          <li><span class="k">Door</span>, <span class="k">Window</span>, <span class="k">Hole</span> — an opening in the selected wall (or a hole in a floor) where the 3D cursor is. Its size: <kbd>F9</kbd> again.</li>
+          <li><span class="k">Stairs</span>, <span class="k">Cylinder</span>, <span class="k">Arch</span> — ready shapes.</li>
+          <li><kbd>[</kbd> and <kbd>]</kbd> — finer / coarser grid. Everything sticks to the grid; <span class="k">Snap</span> puts back what slipped off.</li>
+          <li><kbd>Q</kbd> over the view — the tools' pie menu at the mouse, <kbd>F</kbd> — settings of the selected.</li>
+        </ul>
+        <div class="note"><b>Scale.</b> Sizes are in units, as in CS: 16 units = 40 cm, a usual door is 64×112 units. The grid's step is written at the bottom of the view.</div>
+        <h3>The map's edge</h3>
+        <p>The map must be <b>closed</b>: wall it in with no gaps, the walls' corners must meet. Then select the outer walls and press <span class="k">Map edge</span> — the add-on puts invisible walls over them so nobody jumps out.</p>
+        <h3>Colours and surfaces</h3>
+        <p>Select a brush and press a button in <span class="k">Blockout materials</span>. <b>Colours</b> just tell the parts of the map apart. <b>Surfaces</b> (concrete, metal, wood…) set the footstep sounds and how bullets go through the wall. Real textures, models and decals are on the <span class="k">Art</span> tab, once the blockout plays well.</p>
+      </div>
+      <figure class="panel-shot"><div class="shot"><img src="img/maps/build_en.jpg" width="271" height="823" alt="The Build tab" loading="lazy"></div><figcaption>The Build tab: map and grid, brushes, tools, materials.</figcaption></figure>
+    </div>
+
+    <h3>Doors, glass, models</h3>
+    <div class="split">
+      <div>
+        <p>Select a brush and open the <span class="k">Object</span> tab. It shows what the brush blocks (players, bullets, grenades) and has <span class="k">Make into: Model / Door / Mover / Glass</span>: the brush becomes an opening door, a sliding wall or breakable glass.</p>
+      </div>
+      <figure class="panel-shot"><div class="shot"><img src="img/maps/object_en.jpg" width="271" height="298" alt="The Object tab" loading="lazy"></div><figcaption>A selected brush: collision and «Make into».</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section data-id="modes">
+  <div class="wrap">
+    <h2><span class="n">3</span>Spawns, bomb sites, buy zones</h2>
+    <p class="sub">Everything for the game rules is on the <span class="k">Entities</span> tab. A button puts the thing at the 3D cursor (<kbd>Shift</kbd>+right click on the floor, then the button).</p>
+    <div class="split">
+      <div>
+        <ul class="list">
+          <li><span class="k">Spawn T</span>, <span class="k">Spawn CT</span> — where players appear. Put them on the floor, not in a wall. Place <b>5 per side</b> for 5v5 and 2 for Wingman: with fewer spawns than players, they appear inside each other.</li>
+          <li><span class="k">Bomb site A</span>, <span class="k">Bomb site B</span> — volumes on the floor where the bomb is planted.</li>
+          <li><span class="k">Buy zone T / CT</span> — where a side buys weapons at the round start. Usually round its spawns.</li>
+          <li><span class="k">Ladder</span> — a thin volume on a wall to climb. <span class="k">Kill zone</span> — whoever enters dies (a drop, water).</li>
+        </ul>
+        <div class="note warn"><b>Deselect first</b> (<kbd>Alt</kbd>+<kbd>A</kbd>). With a brush selected, a zone button turns <b>that brush</b> into the zone — handy for giving a zone an exact shape, but just as easy to turn a wall into a bomb site by accident. If it happens — <kbd>Ctrl</kbd>+<kbd>Z</kbd>.</div>
+      </div>
+      <figure class="panel-shot"><div class="shot"><img src="img/maps/entities_en.jpg" width="271" height="248" alt="The Entities tab" loading="lazy"></div><figcaption>The Entities tab: players and zones.</figcaption></figure>
+    </div>
+    <h3>What each mode needs</h3>
+    <table class="modes">
+      <thead><tr><th>Mode</th><th>What the map must have</th></tr></thead>
+      <tbody>
+        <tr><td>Sandbox</td><td>Nothing but a floor: run around and look at the map.</td></tr>
+        <tr><td>Free for all</td><td>Spawns (of any side).</td></tr>
+        <tr><td>Team deathmatch</td><td>T spawns and CT spawns — at opposite ends of the map.</td></tr>
+        <tr><td>Wingman 2v2</td><td>T and CT spawns, <b>one</b> bomb site, buy zones.</td></tr>
+        <tr><td>Bomb defuse 5v5</td><td>T and CT spawns, sites <b>A and B</b>, buy zones.</td></tr>
+      </tbody>
+    </table>
+    <p>If a mode is missing something, the add-on warns you, and the game offers only Sandbox and Free for all on that map. The radar (the minimap) is made by itself at export.</p>
+  </div>
+</section>
+
+<section data-id="light">
+  <div class="wrap">
+    <h2><span class="n">4</span>Light and baking</h2>
+    <p class="sub">Light in the game is «baked» into textures beforehand: the map looks good and runs fast, even on a phone.</p>
+    <div class="split">
+      <div>
+        <ol class="steps">
+          <li><b>Sky.</b> The <span class="k">Light</span> tab → <span class="k">Sky</span>: open your own sky picture, take one from the <span class="k">Library</span> or press <span class="k">Make sky</span>.</li>
+          <li><b>Sun.</b> <span class="k">Sun and lamps</span> → <span class="k">Sun</span>. The sun's arrow shows where the light goes; turn it with <kbd>R</kbd>. Where it stands doesn't matter. <span class="k">Preview sun shadows</span> shows the shadows right in Blender.</li>
+          <li><b>Lamps</b> are for indoors: <span class="k">Lamp</span> goes at the cursor, brightness and range in <kbd>F9</kbd>. An <span class="k">Ambient zone</span> lifts corners that are too dark.</li>
+          <li><b>Baking</b> is on the <span class="k">Play</span> tab, step 3 (below). Until the light is baked, a test lights the map with a flat «test light» — enough to check the gameplay.</li>
+        </ol>
+      </div>
+      <figure class="panel-shot"><div class="shot"><img src="img/maps/light_en.jpg" width="271" height="338" alt="The Light tab" loading="lazy"></div><figcaption>The Light tab: sky, sun and lamps, baked light.</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section data-id="export">
+  <div class="wrap">
+    <h2><span class="n">5</span>Check, test and export</h2>
+    <p class="sub">The <span class="k">Play</span> tab goes in steps, top to bottom.</p>
+    <div class="split">
+      <div>
+        <ol class="steps">
+          <li><span class="k">1 · Check</span> → <span class="k">Check the map</span>. The add-on finds what would break in the game: a spawn in the air, a hole to the outside, no bomb site. The magnifier next to a problem shows where it is. <b>✓</b> — all good.</li>
+          <li><span class="k">2 · Test on this computer</span>: pick the <b>Mode</b> and press <span class="k">Test and play</span>. The add-on saves the map, builds it and starts the game right on it, without signing in. If the game is already open, the map loads there. Fixed something — press again.</li>
+          <li><span class="k">3 · Bake light and play</span>: <span class="k">Bake Fast &amp; play</span> — rough light in seconds, to get an idea. <span class="k">Bake Final &amp; play</span> — clean shadows, takes minutes; there you can also pick <b>Final Release</b> — the smoothest shadow edges (4 times as long), for publishing. If nothing changed since the last bake, it doesn't bake again.</li>
+          <li><span class="k">4 · Share (.psmap)</span>: <span class="k">Export .psmap</span> — the whole map as one file next to the .blend; <span class="k">Bake Final &amp; export .psmap</span> — the same with final light.</li>
+        </ol>
+        <p>An exported map shows up in the launcher: <span class="k">Workshop</span> → <span class="k">My maps</span>. There you have <span class="k">Play</span> (the game opens Own server with this map — pick the mode there), <span class="k">Open in Blender</span> and <span class="k">Show in folder</span>.</p>
+        <p>Before publishing, fill in the <span class="k">Workshop card</span> at the bottom of the tab: name, author, about, version. Set up a nice view and press <span class="k">Take the picture (this view)</span> — that's the map's cover.</p>
+      </div>
+      <figure class="panel-shot"><div class="shot"><img src="img/maps/play_en.jpg" width="271" height="418" alt="The Play tab" loading="lazy"></div><figcaption>The Play tab: check → test → bake → file.</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section data-id="publish">
+  <div class="wrap">
+    <h2><span class="n">6</span>Publishing</h2>
+    <p class="sub">A published map is seen by every player: in the launcher and in the game's workshop.</p>
+    <ol class="steps">
+      <li>Export the map (part 5) — better with final light.</li>
+      <li>Launcher → <span class="k">Workshop</span> → <span class="k">Catalog</span> → <span class="k">Publish a map</span>.</li>
+      <li>The map is published under your account: open the game and press <span class="k">Sign in through the game</span> in the launcher.</li>
+      <li>Pick the map, write a description (what the map is, how to play it), tick the tags, add up to 5 screenshots and press <span class="k">Publish</span>.</li>
+      <li>A new version: export the map again, open it in the «Catalog» (marked «Your map») and press <span class="k">Publish a new version</span>. In «What is new in this version» say what changed.</li>
+    </ol>
+    <p><b>Without publishing:</b> just send the <b>.psmap</b> file to a friend. They drop it into the launcher (<span class="k">Downloaded</span>) or press <span class="k">+ Add a map (.psmap)</span> — the map shows up in the game too.</p>
+    <p><b>In the game:</b> Workshop → <span class="k">Catalog</span> or <span class="k">On device</span> → <span class="k">Play</span>: Own server opens with the map and its modes — invite your friends.</p>
+  </div>
+</section>
+
+<section data-id="errors">
+  <div class="wrap">
+    <h2><span class="n">7</span>Common mistakes</h2>
+    <p class="sub">Almost every problem is found by <span class="k">Check the map</span> on the Play tab. Press the magnifier next to a problem — the view shows where it is.</p>
+    <figure class="wide"><div class="shot"><img src="img/maps/leak_en.jpg" width="1400" height="768" alt="A red line shows where players get past the edge of the map" loading="lazy"></div>
+      <figcaption>A wall was lifted, and players can crawl under it past the map's edge. The red line leads to the gap.</figcaption></figure>
+    <div class="errs">
+      <div class="err"><div class="what"><code>Leak: the map is not closed…</code></div><p>There's a gap to the outside; the red line leads to it. Most often a corner where walls don't meet. Close the gap with a wall, then select the outer walls → <span class="k">Map edge</span>.</p></div>
+      <div class="err"><div class="what"><code>Players get to the very edge of the map…</code></div><p>A player can walk where there is nothing further, and fall off. Put a wall or <span class="k">Map edge</span> there.</p></div>
+      <div class="err"><div class="what"><code>No spawn for T</code> / <code>for CT</code></div><p>Add spawns: Entities tab → Players.</p></div>
+      <div class="err"><div class="what"><code>…: no floor under it</code> / <code>inside a brush</code></div><p>A spawn hangs in the air or stands in a wall. Put it on the floor (place the 3D cursor on the floor and add the spawn again).</p></div>
+      <div class="err"><div class="what"><code>Wingman needs a bomb site…</code></div><p>The chosen mode is missing spawns or sites (see the table in part 3). Without them the game offers only Sandbox and Free for all.</p></div>
+      <div class="err"><div class="what"><code>…faces one over another in one plane</code></div><p>Two brushes overlap, and the wall would flicker in the game. Move one so they only touch.</p></div>
+      <div class="err"><div class="what"><code>Not closed: has holes</code></div><p>The object is missing faces. On the Object tab: <span class="k">Make solid</span> or <span class="k">Show holes</span>.</p></div>
+      <div class="err"><div class="what"><code>Outside the map's collection</code></div><p>The object isn't in the map and won't get into the game. Press <span class="k">Move into the map</span> on the Object tab.</p></div>
+      <div class="err"><div class="what"><code>No game set</code> / <code>The game is too old</code></div><p>Install or update the game with the launcher — Test and play finds it by itself.</p></div>
+      <div class="err"><div class="what">I added a zone and a wall disappeared</div><p>The wall was selected, and the zone button turned it into the zone. <kbd>Ctrl</kbd>+<kbd>Z</kbd>, deselect (<kbd>Alt</kbd>+<kbd>A</kbd>) and add the zone again.</p></div>
+    </div>
+    <p style="margin-top:24px">More questions? The keys are listed in the add-on itself: Build tab → <span class="k">Keys and help</span>. Or ask in the testers' chat on <a href="https://t.me/placeholder_shooter" target="_blank" rel="noopener">Telegram</a>.</p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span data-t="foot">Placeholder — инди-проект. Бета-версия, возможны ошибки.</span>
+    <a href="index.html" data-t="home">Главная страница</a>
+  </div>
+</footer>
+
+<div class="lightbox" id="lightbox"><img alt=""></div>
+
+<script>
+// Language: as on the main page — the visitor's own choice, else ?lang= (the launcher adds it), else the browser's.
+const T = {
+  ru: { back: "← <span>На главную</span>", foot: "Placeholder — инди-проект. Бета-версия, возможны ошибки.", home: "Главная страница",
+        title: "Как делать карты — Placeholder",
+        description: "Карты для Placeholder в бесплатном Blender: установка через лаунчер, первая карта, спавны и точки, свет, тест, публикация в мастерскую." },
+  en: { back: "← <span>Home</span>", foot: "Placeholder is an indie project. Beta version — bugs are possible.", home: "Main page",
+        title: "How to make maps — Placeholder",
+        description: "Maps for Placeholder in free Blender: install from the launcher, your first map, spawns and sites, light, testing, publishing to the workshop." },
+};
+function pickLang() {
+  const q = new URLSearchParams(location.search).get("lang"); if (q === "ru" || q === "en") return q;
+  try { const saved = localStorage.getItem("lang"); if (saved === "ru" || saved === "en") return saved; } catch (e) {}
+  const langs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || "en"];
+  return langs.some(l => /^(ru|uk|be|kk)\b/i.test(l)) ? "ru" : "en";
+}
+function setLang(lang, remember) {
+  document.documentElement.lang = lang;
+  document.title = T[lang].title;
+  document.querySelector('meta[name="description"]').content = T[lang].description;
+  // Both languages have the same sections; only the shown one carries the ids, so #anchors (the launcher's too) work.
+  document.querySelectorAll("[data-lang-block]").forEach(m => {
+    m.hidden = m.dataset.langBlock !== lang;
+    m.querySelectorAll("[data-id]").forEach(e => { if (m.hidden) e.removeAttribute("id"); else e.id = e.dataset.id; });
+  });
+  document.querySelectorAll("[data-t]").forEach(e => e.innerHTML = T[lang][e.dataset.t]);
+  document.querySelectorAll("[data-lang]").forEach(b => b.classList.toggle("is-on", b.dataset.lang === lang));
+  if (remember) { try { localStorage.setItem("lang", lang); } catch (e) {} }
+}
+document.querySelectorAll("[data-lang]").forEach(b => b.onclick = () => {
+  const id = location.hash; setLang(b.dataset.lang, true);
+  if (id) goHash();
+});
+setLang(pickLang(), false);
+function goHash() {
+  const t = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
+  if (t) t.scrollIntoView();
+}
+
+// Screenshots open full size.
+const lb = document.getElementById("lightbox");
+document.querySelectorAll(".shot img").forEach(img => img.parentElement.onclick = () => { lb.firstElementChild.src = img.src; lb.classList.add("is-open"); });
+lb.onclick = () => lb.classList.remove("is-open");
+document.addEventListener("keydown", e => { if (e.key === "Escape") lb.classList.remove("is-open"); });
+</script>
+</body>
+</html>
