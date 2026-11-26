@@ -406,27 +406,25 @@ footer .links { margin-left:auto; display:flex; gap:18px; flex-wrap:wrap; }
    (the files carry the version in their names, Placeholder-<v>.apk / Placeholder-Windows-<v>.zip, so a second download
    never turns into "Placeholder (1).apk"). */
 const SITE = {
-  version: "0.0.6 beta",
-  date: { ru: "24 ноября 2026", en: "November 24, 2026" },
+  version: "0.0.7 beta",
+  date: { ru: "26 ноября 2026", en: "November 26, 2026" },
   links: {
     // "" = the button says «Скоро» / "Soon" and is not clickable (no file in the release yet);
     // windows32 "" = no «Which Windows?» pop-up, the Windows button downloads the 64-bit file at once
-    windows:   "https://github.com/sprivolk/placeholder-shooter/releases/download/v0.0.6/Placeholder-Windows-0.0.6.zip",
-    windows32: "https://github.com/sprivolk/placeholder-shooter/releases/download/v0.0.6/Placeholder-Windows-x86-0.0.6.zip",
+    windows:   "https://github.com/sprivolk/placeholder-shooter/releases/download/v0.0.7/Placeholder-Windows-0.0.7.zip",
+    windows32: "https://github.com/sprivolk/placeholder-shooter/releases/download/v0.0.7/Placeholder-Windows-x86-0.0.7.zip",
     // The PC launcher's Setup (Launcher/, PlaceholderSetup.exe in every release): "" = the Windows button gives the zip.
     launcher:  "https://github.com/sprivolk/placeholder-shooter/releases/latest/download/PlaceholderSetup.exe",
-    android:   "https://github.com/sprivolk/placeholder-shooter/releases/download/v0.0.6/Placeholder-0.0.6.apk",
+    android:   "https://github.com/sprivolk/placeholder-shooter/releases/download/v0.0.7/Placeholder-0.0.7.apk",
     telegram:  "https://t.me/placeholder_shooter",
     bot:       "https://t.me/placeholder_donate_bot",
-    // The master's LavaTop pay page (cards of Russian banks, SBP, foreign cards, PayPal); the button shows only with
-    // SITE.cardOpen (below) or ?card=1 in the address (the author's test). "" = never.
-    card:      "https://57-129-190-160.sslip.io",
+    // The master's LavaTop pay page (cards of Russian banks, SBP, foreign cards, PayPal); the button shows only when the
+    // master's switch «Донат картой» is on (its /api/open), or with ?card=1 in the address (the author's test). "" = never.
+    card:      "https://pay.placeholdershooter.com",
     privacy:   "privacy.html",
     terms:     "terms.html"
   },
-  // «Картой или СБП» in «Поддержать»: false = hidden (2026-11-22, the author: waiting for LavaTop's support), true = shown.
-  cardOpen: false,
-  sizes: { windows: ["ZIP", 247], windows32: ["ZIP", 231], android: ["APK", 268], launcher: ["EXE", 13] }   // [type, MB]
+  sizes: { windows: ["ZIP", 247], windows32: ["ZIP", 231], android: ["APK", 280], launcher: ["EXE", 13] }   // [type, MB]
 };
 
 /* English texts. The Russian ones are the page itself (read from it at load): a Russian edit is made in the HTML,
@@ -512,12 +510,13 @@ document.querySelectorAll("[data-field]").forEach(e => { if (typeof SITE[e.datas
 document.querySelectorAll("[data-link]").forEach(a => {
   const url = SITE.links[a.dataset.link];
   if (url) { a.href = url; if (/^https?:/.test(url) && !/github\.com/.test(url)) { a.target = "_blank"; a.rel = "noopener"; } }
-  // The card pay page: hidden until SITE.cardOpen, or opened by hand with ?card=1.
+  // The card pay page: hidden until the master's switch «Донат картой» is on, or opened by hand with ?card=1.
   // (.btn sets its own display, so the hidden attribute alone would not hide it.)
   if (a.dataset.link === "card") {
-    const shown = !!url && (SITE.cardOpen || new URLSearchParams(location.search).get("card") === "1");
-    a.hidden = !shown;
-    a.style.display = shown ? "" : "none";
+    const show = on => { a.hidden = !on; a.style.display = on ? "" : "none"; };
+    show(!!url && new URLSearchParams(location.search).get("card") === "1");
+    if (url && a.hidden)
+      fetch(url.replace(/\/$/, "") + "/api/open", { cache: "no-store" }).then(r => r.json()).then(j => show(!!j.open)).catch(() => { });
   }
 });
 
