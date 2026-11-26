@@ -252,13 +252,13 @@ footer .links { margin-left:auto; display:flex; gap:18px; flex-wrap:wrap; }
     <nav class="nav">
       <a href="#download" data-i18n="nav.download">Скачать</a>
       <a href="#install" data-i18n="nav.install">Установка</a>
-      <a href="#support" class="nav-accent" data-i18n="nav.support">Поддержать</a>
+      <a href="#support" class="nav-accent" data-link="card" data-i18n="nav.support">Поддержать</a>
       <a href="#faq" data-i18n="nav.faq">Вопросы</a>
     </nav>
     <div class="lang" role="group" aria-label="Language"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
     <a class="btn btn--tg btn--sm" data-link="telegram" href="#"><svg><use href="#i-tg"/></svg><span class="tg-text" data-i18n="tg">Телеграм</span></a>
   </div>
-  <a class="top-support" href="#support"><svg><use href="#i-heart"/></svg><span data-i18n="nav.supportBar">Поддержать проект</span></a>
+  <a class="top-support" href="#support" data-link="card"><svg><use href="#i-heart"/></svg><span data-i18n="nav.supportBar">Поддержать проект</span></a>
 </header>
 
 <!-- ===== Hero ===== -->
@@ -356,10 +356,10 @@ footer .links { margin-left:auto; display:flex; gap:18px; flex-wrap:wrap; }
     <div class="sec-head"><span class="tag">// 03</span><h2 data-i18n="h.support"><span class="accent">Поддержать</span> автора</h2>
       <p data-i18n="support.lead">Игру делает маленькая независимая команда. Донаты пойдут на сервера для матчей и на развитие игры.</p></div>
     <div class="panel soon">
-      <span class="badge"><span class="pulse"></span><span data-i18n="support.badge">Через Telegram</span></span>
-      <p data-i18n="support.text"><span class="accent">Поддержать</span> игру и купить кредиты можно в нашем Telegram-боте — оплата звёздами Telegram, кредиты сразу приходят в игру.</p>
-      <a class="btn btn--primary" data-link="bot" href="#"><svg><use href="#i-tg"/></svg><span data-i18n="support.bot">Открыть бота</span></a>
-      <a class="btn btn--ghost" data-link="card" href="#" hidden style="display:none"><span data-i18n="support.card">Картой или СБП</span></a>
+      <span class="badge"><span class="pulse"></span><span data-i18n="support.badge">Карты, СБП, PayPal</span></span>
+      <p data-i18n="support.text"><span class="accent">Поддержать</span> игру можно на нашем сайте: картой МИР, через СБП, картами Visa и Mastercard, PayPal и другими способами. Там же — золотая коллекция Спонсора. Кредиты покупаются в нашем Telegram-боте за звёзды.</p>
+      <a class="btn btn--primary" data-link="card" href="#"><svg><use href="#i-heart"/></svg><span data-i18n="support.card">Поддержать проект</span></a>
+      <a class="btn btn--ghost" data-link="bot" href="#"><svg><use href="#i-tg"/></svg><span data-i18n="support.bot">Кредиты в боте</span></a>
     </div>
   </div>
 </section>
@@ -418,9 +418,9 @@ const SITE = {
     android:   "https://github.com/sprivolk/placeholder-shooter/releases/download/v0.0.7/Placeholder-0.0.7.apk",
     telegram:  "https://t.me/placeholder_shooter",
     bot:       "https://t.me/placeholder_donate_bot",
-    // The master's LavaTop pay page (cards of Russian banks, SBP, foreign cards, PayPal); the button shows only when the
-    // master's switch «Донат картой» is on (its /api/open), or with ?card=1 in the address (the author's test). "" = never.
-    card:      "https://pay.placeholdershooter.com",
+    // The master's LavaTop pay page, opened on «Просто поддержать» (cards of Russian banks, SBP, foreign cards, PayPal):
+    // every «Поддержать» on the site leads there (the author, 2026-11-26). "" = the bot instead.
+    card:      "https://pay.placeholdershooter.com/?pack=donate",
     privacy:   "privacy.html",
     terms:     "terms.html"
   },
@@ -463,10 +463,10 @@ const EN = {
   "warn1": "Your antivirus may complain about a new game without a digital signature. Only download from the links on this page or in our Telegram.",
   "warn2": "On Xiaomi (MIUI / HyperOS) you may need to confirm the installation once more in a separate window.",
   "support.lead": "The game is made by a small independent team. Donations will go to match servers and to developing the game.",
-  "support.badge": "Via Telegram",
-  "support.text": "<span class=\"accent\">Support</span> the game and buy credits in our Telegram bot — you pay with Telegram Stars, the credits come to the game at once.",
-  "support.bot": "Open the bot",
-  "support.card": "Pay by card",
+  "support.badge": "Cards, SBP, PayPal",
+  "support.text": "<span class=\"accent\">Support</span> the game on our site: by card (Visa, Mastercard, MIR), SBP, PayPal and more. The Sponsor gold collection is there too. Credits are sold in our Telegram bot for Stars.",
+  "support.bot": "Credits in the bot",
+  "support.card": "Support the project",
   "q1": "Is the game free?", "a1": "Yes. Downloading and playing is free.",
   "q2": "Will my progress carry over after the beta?",
   "a2": "Items with the yellow beta stamp stay with you forever. Everything else given out for the test may be reset before release.",
@@ -510,14 +510,6 @@ document.querySelectorAll("[data-field]").forEach(e => { if (typeof SITE[e.datas
 document.querySelectorAll("[data-link]").forEach(a => {
   const url = SITE.links[a.dataset.link];
   if (url) { a.href = url; if (/^https?:/.test(url) && !/github\.com/.test(url)) { a.target = "_blank"; a.rel = "noopener"; } }
-  // The card pay page: hidden until the master's switch «Донат картой» is on, or opened by hand with ?card=1.
-  // (.btn sets its own display, so the hidden attribute alone would not hide it.)
-  if (a.dataset.link === "card") {
-    const show = on => { a.hidden = !on; a.style.display = on ? "" : "none"; };
-    show(!!url && new URLSearchParams(location.search).get("card") === "1");
-    if (url && a.hidden)
-      fetch(url.replace(/\/$/, "") + "/api/open", { cache: "no-store" }).then(r => r.json()).then(j => show(!!j.open)).catch(() => { });
-  }
 });
 
 // A platform whose file is not out yet: «Скоро» / "Soon", not clickable.
